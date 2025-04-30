@@ -27,7 +27,7 @@ DEFINE VARIABLE l-dias     AS INTEGER   NO-UNDO.
 DEFINE VARIABLE l-Acuse    AS RECID     NO-UNDO.
 DEFINE VARIABLE l-teclas   AS CHARACTER
     INITIAL "GO,ENTER,RETURN,TAB" NO-UNDO.
-DEFINE VARIABLE l-totgasto AS DECIMAL
+DEFINE VARIABLE l-totgasto AS DECIMAL   
     FORMAT "-zzz,zzz,zz9.99" NO-UNDO.
 DEFINE VARIABLE l-im1      LIKE DocAcuse.ImpPago NO-UNDO.   
 DEFINE VARIABLE l-esp      LIKE DocAcuse.ImpPago NO-UNDO.
@@ -116,7 +116,7 @@ PROCEDURE GetAcuse:
         IF AVAILABLE CPago THEN 
         DO: 
             ASSIGN
-                Respuesta = 'No se permite cancelar, fue generado Complemento de Pagoo.'
+                Respuesta = 'No se permite cancelar, fue generado Complemento de Pago.'
                 IdError   = TRUE.
             RETURN.
         END.
