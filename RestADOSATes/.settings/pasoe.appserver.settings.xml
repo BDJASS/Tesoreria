@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<module-content version="12.8">
+    <module id="1356ee06-4d31-4a67-8f9b-dae6a07e3c08" name="RestADOSATes">
+        <resource path="AppServer" publish="true"/>
+    </module>
+</module-content>
