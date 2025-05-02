@@ -63,8 +63,8 @@ PROCEDURE GetVisorAcuses:
     IF l-fecdepfin = ? THEN l-fecdepfin = TODAY.
 
     
-    IF IdAcuse = ? THEN IdAcuse = "".
-    IF IdCliente = ? THEN IdCliente = 0.
+    IF IdAcuse    = ? THEN IdAcuse = "".
+    IF IdCliente  = ? THEN IdCliente = 0.
     IF IdTipoPago = ? THEN IdTipoPago = 0.
     DEFINE BUFFER bf-acuse     FOR Acuse.
     DEFINE BUFFER bf-pagoacuse FOR PagoAcuse.
