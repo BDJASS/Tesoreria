@@ -74,7 +74,7 @@ PROCEDURE GetVisorAcuses:
 FOR EACH Acuse  WHERE Acuse.FecOper  >= l-fecdepini 
                  AND Acuse.FecOper  <= l-fecdepfin
                  AND Acuse.Estatus   = Estatus
-                 //AND Acuse.Id-Origen = 'ST'
+                 //AND Acuse.Id-Origen = 'ST'   
                  AND Acuse.Tipo     <> "C"
                  AND (IF IdAcuse <> "" AND IdAcuse <> ? THEN Acuse.Id-Acuse = IdAcuse ELSE TRUE)
                  AND (IF IdCliente <> 0 AND IdCliente <> ? THEN Acuse.Id-Cliente = IdCliente ELSE TRUE) NO-LOCK 
