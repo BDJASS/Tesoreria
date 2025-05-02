@@ -78,7 +78,7 @@ FOR EACH Acuse WHERE Acuse.FecOper  >= l-fecdepini
                  AND Acuse.Tipo     <> "C"
                  AND (IF IdAcuse <> "" AND IdAcuse <> ? THEN Acuse.Id-Acuse = IdAcuse ELSE TRUE)
                  AND (IF IdCliente <> 0 AND IdCliente <> ? THEN Acuse.Id-Cliente = IdCliente ELSE TRUE) NO-LOCK USE-INDEX Idx-FecOper
-                 BY Acuse.FecOper BY Acuse.Id-Acuse
+                // BY Acuse.FecOper BY Acuse.Id-Acuse
                  :
                                                   
     FOR EACH PagoAcuse OF Acuse WHERE (IF IdTipoPago <> 0 AND IdTipoPago <> ? THEN PagoAcuse.Id-Tp = IdTipoPago ELSE TRUE) NO-LOCK:                         
