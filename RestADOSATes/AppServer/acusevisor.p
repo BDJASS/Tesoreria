@@ -71,16 +71,14 @@ PROCEDURE GetVisorAcuses:
     DEFINE BUFFER bf-pagoacuse FOR PagoAcuse.
 
 
-FOR EACH Acuse USE-INDEX Idx-FecOper
-                 WHERE Acuse.FecOper  >= l-fecdepini 
+FOR EACH Acuse  WHERE Acuse.FecOper  >= l-fecdepini 
                  AND Acuse.FecOper  <= l-fecdepfin
                  AND Acuse.Estatus   = Estatus
                  //AND Acuse.Id-Origen = 'ST'
                  AND Acuse.Tipo     <> "C"
                  AND (IF IdAcuse <> "" AND IdAcuse <> ? THEN Acuse.Id-Acuse = IdAcuse ELSE TRUE)
                  AND (IF IdCliente <> 0 AND IdCliente <> ? THEN Acuse.Id-Cliente = IdCliente ELSE TRUE) NO-LOCK 
-                // BY Acuse.FecOper BY Acuse.Id-Acuse
-                 :
+                BY Acuse.FecOper BY Acuse.Id-Acuse:
                                                   
     FOR EACH PagoAcuse OF Acuse WHERE (IF IdTipoPago <> 0 AND IdTipoPago <> ? THEN PagoAcuse.Id-Tp = IdTipoPago ELSE TRUE) NO-LOCK:                         
         //IF Acuse.Tipo = "C" THEN NEXT.
