@@ -1,3 +1,4 @@
+@openapi.openedge.export FILE(type="REST", executionMode="single-run", useReturnValue="false", writeDataSetBeforeImage="false").
 
 /*------------------------------------------------------------------------
     File        : teserp012.p
@@ -74,6 +75,7 @@ DEFINE TEMP-TABLE ttDiarioDesc NO-UNDO
 
      
  
+@openapi.openedge.export(type="REST", useReturnValue="false", writeDataSetBeforeImage="false").
 PROCEDURE GetRepDiarioDescuentos:
     /*------------------------------------------------------------------------------
      Purpose:
@@ -111,20 +113,21 @@ PROCEDURE GetRepDiarioDescuentos:
            &Id-MC_Fact = "b-Mov.Id-MC"
            &Id-MC_NCO  = "b-Mov.Id-MC"
            &Id-MC_Che  = "b-Mov.Id-MC" }
-
-        DISPLAY 
-          MovCliente.Id-Ncr
-          MovCliente.FecReg
-          MovCliente.Id-Cliente
-          Cliente.RazonSocial WHEN AVAILABLE cliente
-          MovCliente.RefSaldo
-          IF l-iva > 0 THEN l-iva ELSE ((MovCliente.Importe * -1) - l-sub) @ l-monto 
-          l-sub
-          TabMC.Descr WHEN AVAILABLE TabMC
-          IF l-iva > 0 THEN (l-sub + l-iva) ELSE (MovCliente.Importe * -1) @ MovCliente.Importe  .                
+           
+       
+       CREATE ttDiarioDesc.
+        ASSIGN
+         ttDiarioDesc.NCR   =  MovCliente.Id-Ncr
+         ttDiarioDesc.Fecha = MovCliente.FecReg
+         ttDiarioDesc.Cliente =  MovCliente.Id-Cliente
+         ttDiarioDesc.RazonSocial =  Cliente.RazonSocial WHEN AVAILABLE cliente
+         ttDiarioDesc.Factura =  MovCliente.RefSaldo
+          ttDiarioDesc.Iva = IF l-iva > 0 THEN l-iva ELSE ((MovCliente.Importe * -1) - l-sub) 
+          ttDiarioDesc.Importe = l-sub
+          ttDiarioDesc.Concepto = TabMC.Descr WHEN AVAILABLE TabMC
+          ttDiarioDesc.Total = IF l-iva > 0 THEN (l-sub + l-iva) ELSE (MovCliente.Importe * -1).                
                    
-  
+    END.   
   END.                    
    
-END PROCEDURE.    
-     
+END PROCEDURE.

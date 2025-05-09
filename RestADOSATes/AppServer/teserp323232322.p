@@ -206,7 +206,7 @@ PROCEDURE GetDashBoard:
     /* Busqueda de Remisiones NORMALES */
     FOR EACH MovCaja WHERE MovCaja.FecDep    <= l-fecoper  AND
         MovCaja.Fecoper    = l-fecoper  AND
-        /*MovCaja.Canc       =  FALSE     AND*/
+      /*  MovCaja.Canc       =  FALSE     AND */
         MovCaja.TipoVenta  = (IF l-tipo = 'Ticket' THEN 1 ELSE 2 ) AND
         (IF l-cliente < 3 THEN 
         (NOT CAN-DO(l-ListSuc,STRING(MovCaja.Id-Caja)))

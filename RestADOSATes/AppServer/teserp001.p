@@ -679,7 +679,7 @@ DO iFecha = l-Fecha TO (l-Fecha - 30) BY -1:
         ttDepositos.TotalDepositado = l-Depositos
         ttDepositos.DepositoTotal   = l-Total2
         ttDepositos.Diferencia      = l-Depositos - l-Total2.
-END.
+END.   
 
 FOR EACH Remision WHERE Remision.Pagada = FALSE 
                     AND Remision.TipoVenta = 2 AND Remision.FecReg >= l-Fecha

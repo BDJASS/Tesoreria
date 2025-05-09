@@ -63,6 +63,14 @@
   <prgs:resource consumes="application/json" name="_FichaDeposito" path="/FichaDeposito" produces="application/json">
     <prgs:operation consumes="application/json" idls="RestADOSATes/.services/AppServer/teserp010.pidl::com.progress.openedge.pdt.bpmbindings" name="teserp010..GetFichaDepositos" produces="application/json" verb="GET">
       <prgs:param name="Fecha" type="QUERY"/>
+      <prgs:param name="Confirmar" type="QUERY"/>
+    </prgs:operation>
+    <prgs:operation consumes="application/json" idls="RestADOSATes/.services/AppServer/teserp010.pidl::com.progress.openedge.pdt.bpmbindings" name="teserp010..PostFichaDep" produces="application/json" verb="POST">
+      <prgs:param name="Fecha" type="QUERY"/>
+      <prgs:param name="Confirmar" type="QUERY"/>
+    </prgs:operation>
+    <prgs:operation consumes="application/json" idls="RestADOSATes/.services/AppServer/teserp010.pidl::com.progress.openedge.pdt.bpmbindings" name="teserp010..DeleteDep" produces="application/json" verb="DELETE">
+      <prgs:param name="Fecha" type="QUERY"/>
     </prgs:operation>
   </prgs:resource>
   <prgs:resource consumes="application/json" name="_Cuentas" path="/CuentasContables" produces="application/json">
@@ -79,4 +87,17 @@
       <prgs:param name="FechaFin" type="QUERY"/>
     </prgs:operation>
   </prgs:resource>
+  <prgs:resource consumes="application/json" name="_RepDiarioDescuento" path="/RepDiarioDescuento" produces="application/json">
+    <prgs:operation consumes="application/json" idls="RestADOSATes/.services/AppServer/teserp012.pidl::com.progress.openedge.pdt.bpmbindings" name="teserp012..GetRepDiarioDescuentos" produces="application/json" verb="GET">
+      <prgs:param name="FechaInicio" type="QUERY"/>
+      <prgs:param name="FechaFin" type="QUERY"/>
+    </prgs:operation>
+  </prgs:resource>
+  <prgs:resource consumes="application/json" name="_RepDiarioPago" path="/RepDiarioPago" produces="application/json">
+    <prgs:operation consumes="application/json" idls="RestADOSATes/.services/AppServer/teserp013.pidl::com.progress.openedge.pdt.bpmbindings" name="teserp013..GetRepDiarioPagos" produces="application/json" verb="GET">
+      <prgs:param name="FechaInicio" type="QUERY"/>
+      <prgs:param name="FechaFin" type="QUERY"/>
+    </prgs:operation>
+  </prgs:resource>
+  <prgs:resource consumes="application/json" name="_DepositoAcuses" path="/DepositoAcuses" produces="application/json"/>
 </prgs:model>
