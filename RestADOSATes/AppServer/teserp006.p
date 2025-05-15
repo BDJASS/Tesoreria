@@ -143,7 +143,7 @@ PROCEDURE PostChequeDev:
     FIND FIRST Calidad WHERE Calidad.CheDev = TRUE NO-LOCK NO-ERROR.
     FIND Cliente OF CheDev EXCLUSIVE-LOCK NO-ERROR.
 
-    ASSIGN 
+    ASSIGN    
         v-calidadant     = cliente.id-calidad
         v-calidadnew     = 0
         CheDev.Id-CheDev = Folio.Prefijo +
@@ -201,11 +201,15 @@ PROCEDURE PostChequeDev:
               &Afectar     = TRUE
               &Cliente     = CheDev.Id-Cliente
               &Ubic        = 'TE'  }
-
+    
     RELEASE Folio.
     ASSIGN 
-        Resp = TRUE.
-    FIND Folio WHERE Folio.Id-Doc = "AVISO" EXCLUSIVE-LOCK NO-ERROR.
+        Resp = TRUE
+        l-recid               = RECID(CheDev)
+        l-refer               = Chedev.Id-chedev.   
+        
+     /* Indicaron que ya no se registren cargos de aviso solo chedev  jass_01*/   
+  /*  FIND Folio WHERE Folio.Id-Doc = "AVISO" EXCLUSIVE-LOCK NO-ERROR.
     ASSIGN 
         l-folio     = Folio.Folio
         Folio.Folio = Folio.Folio + 1 .
@@ -226,10 +230,10 @@ PROCEDURE PostChequeDev:
         AvisoCargo.Id-CheDev  = CheDev.Id-CheDev
         AvisoCargo.Id-Cliente = CheDev.Id-Cliente
         AvisoCargo.FecReg     = TODAY
-        AvisoCargo.Usuario    = ttCheque.IdUser
-        l-recid-ac            = RECID(AvisoCargo)
+        AvisoCargo.Usuario    = ttCheque.IdUser 
+        l-recid-ac            = RECID(AvisoCargo)  
         l-recid               = RECID(CheDev)
-        l-refer               = Chedev.Id-chedev.
+        l-refer               = Chedev.Id-chedev.*/
 END. // TTCHEQUE
 RELEASE Cliente.
 RELEASE EstCte.  
@@ -237,13 +241,13 @@ RELEASE Folio.
 RELEASE MovCliente.
 RELEASE CheDev.
 RELEASE AvisoCargo.
-IF l-recid-ac > 0 THEN 
+IF l-recid > 0 THEN 
 DO: ASSIGN
     Respuesta = 'Cheque Devuelto registrado con Referencia: ' +
         STRING(l-refer)
     IdError = FALSE.
     RETURN.
-END.
+END.   
  
      
      

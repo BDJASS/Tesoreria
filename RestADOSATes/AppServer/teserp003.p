@@ -15,7 +15,7 @@
 
 BLOCK-LEVEL ON ERROR UNDO, THROW. /* Manejo de errores global */
 
-DEFINE TEMP-TABLE ttFactura NO-UNDO           
+DEFINE TEMP-TABLE ttFactura NO-UNDO              
     FIELD IdFactura   AS CHARACTER FORMAT "x(15)" /* Número de factura */
     FIELD IdCliente   AS INTEGER                  /* Número de cliente */
     FIELD FecReg      AS DATE                     /* Fecha de registro */
@@ -150,14 +150,15 @@ PROCEDURE GetRefactura:
     DO:
         ASSIGN 
             Respuesta = "El usuario especificado no existe."
-            IdError = TRUE.
+            IdError   = TRUE.
         RETURN.
     END.
     
     IF NOT CAN-DO("1,2,3", STRING(pTipo)) THEN 
-    DO: ASSIGN
-        Respuesta = "Tipo de Factura No Valida"
-        IdError = TRUE.
+    DO: 
+        ASSIGN
+            Respuesta = "Tipo de Factura No Valida"
+            IdError   = TRUE.
         RETURN.
     END. 
 
@@ -170,7 +171,7 @@ PROCEDURE GetRefactura:
     DO:
         ASSIGN 
             Respuesta = "El usuario especificado " + pIdUser + " no cuenta con Id-Ubicacion"
-            IdError = TRUE.
+            IdError   = TRUE.
         RETURN.
     END.
     /* EL PROGRAMA SOLICITA G-origen */
@@ -179,46 +180,102 @@ PROCEDURE GetRefactura:
     FIND Factura WHERE Factura.id-factura = pIdFactura
         NO-LOCK NO-ERROR.
     IF NOT AVAILABLE Factura THEN 
-    DO: ASSIGN
-        Respuesta =  "El Folio de la factura no esta registrada"
-        IdError = TRUE.
+    DO: 
+        ASSIGN
+            Respuesta = "El Folio de la factura no esta registrada"
+            IdError   = TRUE.
         RETURN.
     END.
+    /*
     IF Factura.FecCanc <> ? THEN 
     DO: 
         FIND FIRST Empleado WHERE empleado.Iniciales = Factura.UsuarioCanc NO-LOCK NO-ERROR.
+        FIND FIRST Empleado WHERE empleado.Iniciales  = Factura.UsuarioSol NO-LOCK NO-ERROR.
+        
         ASSIGN
-        Respuesta = "La factura ya fue cancelada el dia " + STRING(Factura.FecCancel) +
-                   " por " + (IF AVAILABLE Empleado THEN Empleado.Nombre ELSE Factura.UsuarioCanc)
-        IdError = TRUE.
+            Respuesta = "La factura ya fue cancelada el dia " + STRING(Factura.FecCancel) +
+                   " por " + (IF AVAILABLE Empleado THEN Empleado.Nombre ELSE Factura.UsuarioCanc)+ "." +
+                   "Autorizado por :" + STRING(Factura.UsuarioSol)+ "." + 
+                   "Motivo :" + STRING(Factura.Motivo) + "."   
+            IdError   = TRUE.
         RETURN.  
-    END.
+    END. */
+    
+    IF Factura.FecCanc <> ? THEN 
+    DO: 
+        DEFINE VARIABLE cCancela       AS CHARACTER NO-UNDO.
+        DEFINE VARIABLE cAutoriza      AS CHARACTER NO-UNDO.
+        DEFINE VARIABLE cMensajeMotivo AS CHARACTER NO-UNDO.
+    
+        /* Obtener nombre de quien cancela */
+        IF Factura.UsuarioCanc <> "" THEN 
+        DO:
+            FIND FIRST Empleado WHERE empleado.Iniciales = Factura.UsuarioCanc NO-LOCK NO-ERROR.
+            cCancela = IF AVAILABLE Empleado THEN Empleado.Nombre ELSE Factura.UsuarioCanc.
+        END.
+        ELSE 
+        DO:
+            cCancela = "Desconocido".
+        END.
+    
+        /* Obtener nombre de quien autoriza */
+        IF Factura.UsuarioSol <> "" THEN 
+        DO:
+            FIND FIRST Empleado WHERE empleado.Iniciales = Factura.UsuarioSol NO-LOCK NO-ERROR.
+            cAutoriza = IF AVAILABLE Empleado THEN Empleado.Nombre ELSE Factura.UsuarioSol.
+        END.
+        ELSE 
+        DO:
+            cAutoriza = "No especificado".
+        END.
+    
+        /* Manejar el motivo solo si existe */
+        IF Factura.Motivo <> "" AND Factura.Motivo <> ? THEN
+            cMensajeMotivo = " Motivo: " + STRING(Factura.Motivo) + ".".
+        ELSE
+            cMensajeMotivo = "".
+    
+        /* Construir mensaje final */
+        ASSIGN
+            Respuesta = "La factura ya fue cancelada el dia " + STRING(Factura.FecCancel) +
+                   " por " + cCancela + "." +
+                   (IF Factura.UsuarioSol <> "" 
+                    THEN "Solicitado por: " + cAutoriza + "." 
+                    ELSE "") + 
+                   cMensajeMotivo  
+            IdError   = TRUE.
+        RETURN.  
+    END.             
     IF {salt0005.i} = 'MATRIZ' AND Factura.Id-factura BEGINS '4' AND
         Factura.FecReg < 10/31/2016 THEN 
-    DO: ASSIGN
-        Respuesta = 'La factura es de Saltillo. Solo se puede cancelar en la ' +
+    DO: 
+        ASSIGN
+            Respuesta = 'La factura es de Saltillo. Solo se puede cancelar en la ' +
             'Sucursal.'
-        IdError = TRUE.
+            IdError   = TRUE.
         RETURN.
     END.
     IF {salt0005.i} = 'SALTILLO' AND NOT Factura.Id-factura BEGINS '4' THEN 
-    DO: ASSIGN
-        Respuesta = 'La factura es de Matriz. Solo se puede cancelar en la ' +
+    DO: 
+        ASSIGN
+            Respuesta = 'La factura es de Matriz. Solo se puede cancelar en la ' +
             'Matriz.'
-        IdError = TRUE.
+            IdError   = TRUE.
         RETURN.
     END.
       
     IF YEAR(TODAY) - YEAR(Factura.FecReg) > 1 THEN 
-    DO: ASSIGN
-        Respuesta = "La factura tiene mas de un a�o, no puede realizarse la cancelacion"
-        IdError = TRUE.
+    DO: 
+        ASSIGN
+            Respuesta = "La factura tiene mas de un a�o, no puede realizarse la cancelacion"
+            IdError   = TRUE.
         RETURN.
     END.
     IF YEAR(TODAY) <> YEAR(Factura.FecReg) AND MONTH(TODAY) > 3 THEN 
-    DO: ASSIGN
-        Respuesta = "No puede cancelar facturas de un a�o anterior despues de Marzo."
-        IdError = TRUE.
+    DO: 
+        ASSIGN
+            Respuesta = "No puede cancelar facturas de un a�o anterior despues de Marzo."
+            IdError   = TRUE.
         RETURN.
     END.
       
@@ -232,9 +289,10 @@ PROCEDURE GetRefactura:
             (g-Origen = "8" AND NOT Factura.id-Factura BEGINS '8') OR 
             (g-Origen = "9" AND NOT Factura.id-Factura BEGINS '9') OR 
             (g-Origen = "10" AND NOT Factura.id-Factura BEGINS 'N') THEN 
-        DO: ASSIGN
-            Respuesta = 'No se permite cancelar factura de diferentes tiendas.'
-            IdError = TRUE.
+        DO: 
+            ASSIGN
+                Respuesta = 'No se permite cancelar factura de diferentes tiendas.'
+                IdError   = TRUE.
             RETURN.
         END.   
     END.
@@ -243,9 +301,10 @@ PROCEDURE GetRefactura:
     IF Factura.FecReg <> TODAY THEN   
     DO:
         IF LOOKUP(pIdUser, l-SuperUser) = 0 AND NOT CAN-DO(l-PermisosLista,pIdUser) THEN 
-        DO: ASSIGN
-            Respuesta = 'No se permite cancelar factura de diferente dia.'
-            IdError = TRUE.
+        DO: 
+            ASSIGN
+                Respuesta = 'No se permite cancelar factura de diferente dia.'
+                IdError   = TRUE.
             RETURN.
         END.
         ELSE 
@@ -266,7 +325,7 @@ PROCEDURE GetRefactura:
                 DO:
                     ASSIGN 
                         Respuesta = "Se realizara una cancelacion de una factura de un mes ya cerrado..."
-                        IdError = FALSE.
+                        IdError   = FALSE.
                     RETURN.
                 END.     
             END.
@@ -276,17 +335,19 @@ PROCEDURE GetRefactura:
     IF INDEX(l-Permisos, pIdUser) > 0  THEN 
     DO:
         IF Factura.Pedidos = "" THEN 
-        DO: ASSIGN
-            Respuesta =  "La factura no pertenece a ningun pedido, cancelacion no procede."
-            IdError = TRUE.
+        DO: 
+            ASSIGN
+                Respuesta = "La factura no pertenece a ningun pedido, cancelacion no procede."
+                IdError   = TRUE.
             RETURN.
         END.
         FIND FIRST EstPedido WHERE EstPedido.Id-Factura = Factura.Id-Factura
             AND EstPedido.Estatus >= 6 NO-LOCK NO-ERROR.
         IF AVAILABLE EstPedido THEN 
-        DO: ASSIGN
-            Respuesta = "La factura de credito ya fue embarcada, cancelacion no procede."
-            IdError = TRUE.
+        DO: 
+            ASSIGN
+                Respuesta = "La factura de credito ya fue embarcada, cancelacion no procede."
+                IdError   = TRUE.
             RETURN.
         END.
         FIND FIRST Pedido WHERE Pedido.Id-Pedido = ENTRY(1,Factura.Pedidos)
@@ -296,10 +357,10 @@ PROCEDURE GetRefactura:
                                      AND NOT CAN-DO("02B,FUG",Pedido.Id-Alm) NO-LOCK NO-ERROR.
         */
         IF AVAILABLE Pedido THEN 
-        DO: ASSIGN
-            Respuesta =
-                "La venta no pertenece a su almacen, cancelacion no precede."
-                IdError = TRUE.
+        DO: 
+            ASSIGN
+                Respuesta = "La venta no pertenece a su almacen, cancelacion no precede."
+                IdError   = TRUE.
             RETURN.
         END.
     END.
@@ -315,7 +376,7 @@ PROCEDURE GetRefactura:
             Respuesta = "La Factura tiene articulos registrados por devolucion" +
           " por lo tanto no se permite cancelar facturas parciales. En caso de "
           + " querer realizar la cancelacion hagalo con una devolucion."
-          IdError = TRUE.    
+            IdError   = TRUE.    
         RETURN.   
     END.
     /* pendiente validar que la factura no tenga ningun abono */
@@ -349,7 +410,7 @@ PROCEDURE GetRefactura:
         ttFactura.IVA         = Factura.Iva      
         ttFactura.Total       = Factura.Tot
         ttFactura.Requisicion = Factura.requisicion    
-        ttFactura.IdTran    = Factura.Id-Tran
+        ttFactura.IdTran      = Factura.Id-Tran
         ttFactura.Transporte  = IF AVAILABLE Transporte THEN Transporte.Nombre ELSE "".
          
     

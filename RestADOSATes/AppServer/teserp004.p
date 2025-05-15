@@ -863,7 +863,7 @@ END.
 STATUS DEFAULT ''.  
 BELL.
 ASSIGN
-Respuesta = 'FACTURA CANCELADA.'.
+Respuesta = 'La factura se ha cancelado de manera exitosa.'.
 PAUSE 2 NO-MESSAGE.
     
 IF l-acuse <> '' THEN 

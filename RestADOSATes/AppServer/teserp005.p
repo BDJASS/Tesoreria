@@ -113,6 +113,7 @@ PROCEDURE GetChequeDevuelto:
 
     FIND CheDev WHERE CheDev.Id-CheDev = l-Id-CheDev
         NO-LOCK NO-ERROR.
+    IF NOT AVAILABLE CheDev THEN RETURN.
     IF AVAILABLE CheDev  THEN 
     DO:
         ASSIGN 
@@ -210,6 +211,7 @@ PROCEDURE GetChequeDevuelto:
                 ttSaldo.Documento = CheDev.Id-CheDev
                 ttSaldo.descr     = 'COM BAN'.
         END.
+        IF AVAILABLE AvisoCargo THEN DO:
         IF AvisoCargo.Importe + AvisoCargo.IVA > 0 THEN 
         DO:
             CREATE ttSaldo.
@@ -220,6 +222,7 @@ PROCEDURE GetChequeDevuelto:
                 ttSaldo.FecReg    = AvisoCargo.FecReg
                 ttSaldo.Documento = STRING(AvisoCargo.Id-Aviso,"9999999")
                 ttSaldo.descr     = 'AVISOC'.
+        END.
         END.
         IF Chedev.ImpInteres > 0 THEN 
         DO:
@@ -316,7 +319,7 @@ PROCEDURE GetChequeDevuelto:
                                             'CANC INTERES'.      
             END.
         END.
-    END.
+    END.         
     ASSIGN 
         l-saldoseek = 0.
     FOR EACH ttSaldo :

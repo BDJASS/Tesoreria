@@ -99,5 +99,25 @@
       <prgs:param name="FechaFin" type="QUERY"/>
     </prgs:operation>
   </prgs:resource>
-  <prgs:resource consumes="application/json" name="_DepositoAcuses" path="/DepositoAcuses" produces="application/json"/>
+  <prgs:resource consumes="application/json" name="_DepositoAcuses" path="/DepositoAcuses" produces="application/json">
+    <prgs:operation consumes="application/json" idls="RestADOSATes/.services/AppServer/teserp014.pidl::com.progress.openedge.pdt.bpmbindings" name="teserp014..PostDepAcuse" produces="application/json" verb="POST">
+      <prgs:param name="Acuse" type="QUERY"/>
+      <prgs:param name="Usuario" type="QUERY"/>
+      <prgs:param name="Confirmar" type="QUERY"/>
+      <prgs:param name="Fecha" type="QUERY"/>
+    </prgs:operation>
+    <prgs:operation consumes="application/json" idls="RestADOSATes/.services/AppServer/teserp014.pidl::com.progress.openedge.pdt.bpmbindings" name="teserp014..GetAcuse" produces="application/json" verb="GET">
+      <prgs:param name="Acuse" type="QUERY"/>
+      <prgs:param name="Usuario" type="QUERY"/>
+      <prgs:param name="Confirmar" type="QUERY"/>
+      <prgs:param name="Fecha" type="QUERY"/>
+    </prgs:operation>
+  </prgs:resource>
+  <prgs:resource consumes="application/json" name="_FacturasGlobales2" path="/FacturasGlobales2" produces="application/json">
+    <prgs:operation consumes="application/json" idls="RestADOSATes/.services/AppServer/facturasglobales2.pidl::com.progress.openedge.pdt.bpmbindings" name="facturasglobales2..GetDashBoard" produces="application/json" verb="GET">
+      <prgs:param name="Fecha" type="QUERY"/>
+      <prgs:param name="Tipo" type="QUERY"/>
+      <prgs:param name="Cliente" type="QUERY"/>
+    </prgs:operation>
+  </prgs:resource>
 </prgs:model>
