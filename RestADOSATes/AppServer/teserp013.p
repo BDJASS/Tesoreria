@@ -27,7 +27,7 @@ BLOCK-LEVEL ON ERROR UNDO, THROW.
 /* **********************  Internal Procedures  *********************** */
 
 
-DEFINE BUFFER b-distiva FOR DistIVA.
+DEFINE BUFFER b-distiva FOR DistIVA.   
 DEFINE BUFFER b-mov FOR Movcliente.
 DEFINE VARIABLE l-count   AS LOGI  NO-UNDO.
 DEFINE VARIABLE l-reporte AS CHARACTER   NO-UNDO.
@@ -97,7 +97,7 @@ PROCEDURE GetRepDiarioPagos:
     DEFINE OUTPUT PARAMETER TABLE FOR  ttDiarioPag.
     
 
-   ASSIGN l-id_mc = "63,64,65,66,67,68,69,73,77,78,87,83,95,96,98,99,97" .
+   ASSIGN l-id_mc = "57,58,59,60,61,62,90" .  
    ASSIGN l-mes     = "Enero,Febrero,Marzo,Abril,Mayo,Junio,Julio,Agosto" +
                    ",Septiembre,Octubre,Noviembre,Diciembre".
                    

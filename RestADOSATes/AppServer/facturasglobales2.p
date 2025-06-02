@@ -55,7 +55,10 @@ DEFINE BUFFER b-Mov      FOR MovCaja.
 DEFINE BUFFER b-Remision FOR Remision.
 DEFINE BUFFER b-MovCaja  FOR MovCaja.
 
-
+DEFINE BUFFER bf-MovNormales   FOR MovCaja.  /* Remisiones normales */
+DEFINE BUFFER bf-MovPostfech   FOR MovCaja.  /* Remisiones postfechadas */
+DEFINE BUFFER bf-MovDevol      FOR MovCaja.  /* Devoluciones */
+      
 
 DEFINE TEMP-TABLE wIva
     FIELD Iva  LIKE Factura.Iva
@@ -101,6 +104,8 @@ DEFINE TEMP-TABLE tttotal
     FIELD Tot    LIKE l-tot
     FIELD Don    LIKE l-redo .
 
+DEFINE TEMP-TABLE ttSucursales NO-UNDO
+    FIELD IdSuc AS CHAR.
 
 DEFINE DATASET dsFactura FOR wMov ,tttotal,ttfact 
     DATA-RELATION dsFac1 FOR wMov ,tttotal
@@ -110,7 +115,7 @@ DEFINE DATASET dsFactura FOR wMov ,tttotal,ttfact
 /* **********************  Internal Procedures  *********************** */
 
 @openapi.openedge.export(type="REST", useReturnValue="false", writeDataSetBeforeImage="false").
-PROCEDURE GetDashBoard:
+PROCEDURE GetGlobal2:
     DEFINE INPUT  PARAMETER l-fecoper AS DATE.
     DEFINE INPUT  PARAMETER l-tipo      AS CHAR.
     DEFINE INPUT  PARAMETER l-cliente      AS INT.
@@ -144,99 +149,134 @@ PROCEDURE GetDashBoard:
         RETURN.
     END.  
     
+    EMPTY TEMP-TABLE ttSucursales.
+    EMPTY TEMP-TABLE ttfact.   
+    EMPTY TEMP-TABLE tttotal.
+    EMPTY TEMP-TABLE wIva.
+    EMPTY TEMP-TABLE wMov.
     ASSIGN 
         l-subtotal = 0
         l-ivaa     = 0
         l-redo     = 0
         l-folio    = ''
-        l-Monto    = 0
-        /*  l-tipo = "Electronica"
-          l-fecoper = TODAY - 62
-          l-cliente = 1*/ .
+        l-Monto    = 0.
 
     IF l-cliente = 4 THEN 
     DO:
         FOR EACH Caja WHERE Caja.Id-Depto = "506" NO-LOCK:
-            l-ListSuc = l-ListSuc + MINIMUM(l-ListSuc,",") + STRING(Caja.Id-Caja).
+            CREATE ttSucursales.
+            ttSucursales.IdSuc = STRING(Caja.Id-Caja).
         END.
     END.
     ELSE IF l-cliente = 5 THEN 
-        DO:
+        DO: 
             FOR EACH Caja WHERE Caja.Id-Depto = "510" NO-LOCK:
-                l-ListSuc = l-ListSuc + MINIMUM(l-ListSuc,",") + STRING(Caja.Id-Caja).
+                CREATE ttSucursales.
+                ttSucursales.IdSuc = STRING(Caja.Id-Caja).
             END.
+            
         END.
         ELSE IF l-cliente = 6 THEN 
-            DO:
+            DO: /*
                 FOR EACH Caja WHERE Caja.Id-Depto = "511" NO-LOCK:
                     l-ListSuc = l-ListSuc + MINIMUM(l-ListSuc,",") + STRING(Caja.Id-Caja).
+                END. */
+                FOR EACH Caja WHERE Caja.Id-Depto = "511" NO-LOCK:
+                    CREATE ttSucursales.
+                    ttSucursales.IdSuc = STRING(Caja.Id-Caja).
                 END.
             END.
             ELSE IF l-cliente = 7 THEN 
-                DO:
+                DO: /*
                     FOR EACH Caja WHERE Caja.Id-Depto = "512" NO-LOCK:
                         l-ListSuc = l-ListSuc + MINIMUM(l-ListSuc,",") + STRING(Caja.Id-Caja).
-                    END.
+                    END. */
+                    
+                    FOR EACH Caja WHERE Caja.Id-Depto = "512" NO-LOCK:
+                        CREATE ttSucursales.
+                        ttSucursales.IdSuc = STRING(Caja.Id-Caja).
+                    END. 
                 END.
                 ELSE IF l-cliente = 8 THEN 
-                    DO:
+                    DO: /*
                         FOR EACH Caja WHERE Caja.Id-Depto = "513" NO-LOCK:
                             l-ListSuc = l-ListSuc + MINIMUM(l-ListSuc,",") + STRING(Caja.Id-Caja).
+                        END. */
+                        FOR EACH Caja WHERE Caja.Id-Depto = "513" NO-LOCK:
+                            CREATE ttSucursales.
+                            ttSucursales.IdSuc = STRING(Caja.Id-Caja).
                         END.
                     END.
                     ELSE IF l-cliente = 9 THEN 
-                        DO:
+                        DO: /*
                             FOR EACH Caja WHERE Caja.Id-Depto = "514" NO-LOCK:
                                 l-ListSuc = l-ListSuc + MINIMUM(l-ListSuc,",") + STRING(Caja.Id-Caja).
+                            END. */
+                            FOR EACH Caja WHERE Caja.Id-Depto = "514" NO-LOCK:
+                                CREATE ttSucursales.
+                                ttSucursales.IdSuc = STRING(Caja.Id-Caja).
                             END.
                         END.
                         ELSE IF l-cliente = 10 THEN 
-                            DO:
+                            DO: /*
                                 FOR EACH Caja WHERE Caja.Id-Depto = "515" NO-LOCK:
                                     l-ListSuc = l-ListSuc + MINIMUM(l-ListSuc,",") + STRING(Caja.Id-Caja).
+                                END. */
+                                FOR EACH Caja WHERE Caja.Id-Depto = "515" NO-LOCK:
+                                    CREATE ttSucursales.
+                                    ttSucursales.IdSuc = STRING(Caja.Id-Caja).
                                 END.
                             END.
                             ELSE 
-                            DO:
+                            DO: /*
                                 FOR EACH Caja WHERE CAN-DO("506,510,511,512,513,514,515",Caja.Id-Depto) NO-LOCK:
                                     l-ListSuc = l-ListSuc + MINIMUM(l-ListSuc,",") + STRING(Caja.Id-Caja).
+                                END. */
+                                FOR EACH Caja WHERE CAN-DO("506,510,511,512,513,514,515",Caja.Id-Depto) NO-LOCK:
+                                    CREATE ttSucursales.
+                                    ttSucursales.IdSuc = STRING(Caja.Id-Caja).
                                 END.
                             END.
-
+   
     /* Busqueda de Remisiones NORMALES */
-    FOR EACH MovCaja WHERE MovCaja.FecDep    <= l-fecoper  AND
-        MovCaja.Fecoper    = l-fecoper  AND
-      /*  MovCaja.Canc       =  FALSE     AND */
-        MovCaja.TipoVenta  = (IF l-tipo = 'Ticket' THEN 1 ELSE 2 ) AND
-        (IF l-cliente < 3 THEN 
-        (NOT CAN-DO(l-ListSuc,STRING(MovCaja.Id-Caja)))
-        ELSE (CAN-DO(l-ListSuc,STRING(MovCaja.Id-Caja))))
+    FOR EACH bf-MovNormales WHERE bf-MovNormales.FecDep    <= l-fecoper  
+        AND bf-MovNormales.Fecoper    = l-fecoper  
+        AND bf-MovNormales.TipoVenta  = (IF l-tipo = 'Ticket' THEN 1 ELSE 2 )
         NO-LOCK 
         USE-INDEX Idx-Fec
-        BREAK BY MovCaja.Id-Caja 
-        BY MovCaja.Turno:
-
-        IF FIRST-OF(MovCaja.Turno) THEN 
+        BREAK BY bf-MovNormales.Id-Caja 
+        BY bf-MovNormales.Turno:
+          
+        /* --- Nueva condición usando ttSucursales (reemplazo del CAN-DO) --- */
+        FIND FIRST ttSucursales WHERE ttSucursales.IdSuc = STRING(bf-MovNormales.Id-Caja) NO-ERROR.
+    
+        /* 
+           - Si l-cliente < 3: QUEREMOS sucursales que NO estén en ttSucursales.
+           - Si l-cliente >= 3: QUEREMOS sucursales que SÍ estén en ttSucursales.
+        */
+        IF (l-cliente < 3 AND AVAILABLE ttSucursales) THEN NEXT.     /* Excluye sucursales de la lista */
+        IF (l-cliente >= 3 AND NOT AVAILABLE ttSucursales) THEN NEXT. /* Excluye sucursales fuera de la lista */
+        IF FIRST-OF(bf-MovNormales.Turno) THEN 
         DO:
             
-            FIND FIRST wMov WHERE wMov.IdCaja = MovCaja.Id-Caja AND
-                wMov.Turno = MovCaja.Turno 
+            FIND FIRST wMov WHERE wMov.IdCaja = bf-MovNormales.Id-Caja AND
+                wMov.Turno = bf-MovNormales.Turno 
                 NO-LOCK NO-ERROR.
             IF NOT AVAILABLE wMov THEN 
             DO:   
                 CREATE wMov.
                 ASSIGN 
                     wMov.id       = "T"
-                    wMov.idcaja   = MovCaja.id-Caja
-                    wMov.Turno    = MovCaja.Turno
+                    wMov.idcaja   = bf-MovNormales.id-Caja
+                    wMov.Turno    = bf-MovNormales.Turno
                     wMov.Selec    = TRUE 
-                    wMov.Concepto = "C" + STRING(MovCaja.Id-Caja) + "  T" +
-                                           STRING(MovCaja.Turno).
+                    wMov.Concepto = "C" + STRING(bf-MovNormales.Id-Caja) + "  T" +
+                                           STRING(bf-MovNormales.Turno).
             END.
         END.
 
-        FIND Remision WHERE Remision.Id-Remision = MovCaja.Referencia AND
-            Remision.TipoVenta = MovCaja.TipoVenta 
+        FIND Remision WHERE Remision.Id-Remision = bf-MovNormales.Referencia AND
+            Remision.TipoVenta = bf-MovNormales.TipoVenta 
             NO-LOCK NO-ERROR.
         IF AVAILABLE Remision THEN 
         DO:
@@ -255,7 +295,7 @@ PROCEDURE GetDashBoard:
                         WHERE b-MovCaja.Refer = b-Remision.Id-Remision
                         AND b-MovCaja.TipoVenta = b-Remision.TipoVenta
                         NO-LOCK NO-ERROR.
-                    IF AVAILABLE b-MovCaja AND b-MovCaja.FecOper <= MovCaja.FecOper
+                    IF AVAILABLE b-MovCaja AND b-MovCaja.FecOper <= bf-MovNormales.FecOper
                         THEN NEXT.
                 END.
             END.
@@ -272,11 +312,11 @@ PROCEDURE GetDashBoard:
                             WHERE b-MovCaja.Refer = b-Remision.Id-Remision
                             AND b-MovCaja.TipoVenta = b-Remision.TipoVenta
                             NO-LOCK NO-ERROR.
-                        IF AVAILABLE b-MovCaja AND b-MovCaja.FecOper < MovCaja.FecOper
+                        IF AVAILABLE b-MovCaja AND b-MovCaja.FecOper < bf-MovNormales.FecOper
                             THEN NEXT.
                     END.
                 END.
-                ELSE IF MovCaja.Canc THEN NEXT.
+                ELSE IF bf-MovNormales.Canc THEN NEXT.
 
             IF l-tipo = 'Remision' /*AND Remision.Folioe <> ""*/ THEN NEXT.
             /*IF l-tipo = 'Electronica' AND Remision.Folioe = "" THEN NEXT.*/
@@ -289,14 +329,14 @@ PROCEDURE GetDashBoard:
                 NO-LOCK NO-ERROR.                            
             IF AVAILABLE DepBanco THEN l-Monto = l-Monto + Remision.Tot.  
 
-            
+            /*
             CREATE ttfact.
             ASSIGN
                 ttfact.id         = "T"
                 ttfact.Documento  = Remision.Id-Remision
-                ttfact.IdSuplente = MovCaja.Turno
+                ttfact.IdSuplente = bf-MovNormales.Turno
                 ttfact.tty        = "J"
-                ttfact.IDmc       = MovCaja.Id-Caja.
+                ttfact.IDmc       = bf-MovNormales.Id-Caja. */
 
             ASSIGN 
                 wMov.ImpVentas = wMov.ImpVentas + Remision.Tot - Remision.Iva
@@ -307,31 +347,32 @@ PROCEDURE GetDashBoard:
                 l-redo         = l-redo + Remision.Redo
                 wMov.Total     = wMov.ImpVentas - wMov.ImpNCred.
 
-            FIND Cliente WHERE Cliente.Id-cliente = Remision.Id-cliente
+         /*   FIND Cliente WHERE Cliente.Id-cliente = Remision.Id-cliente
                 NO-LOCK NO-ERROR.
+           
             ASSIGN 
                 ttfact.IdCliente = Remision.Id-cliente
                 ttfact.nomcte    = cliente.razonsocial
                 ttfact.subtotal  = remision.Tot - remision.iva
                 ttfact.iva       = remision.iva
-                ttfact.tot       = Remision.Tot.
+                ttfact.tot       = Remision.Tot. */
 
-            IF MovCaja.Id-ncr <> "" THEN 
+            IF bf-MovNormales.Id-ncr <> "" THEN 
             DO:
                 
-                FIND Ncr WHERE Ncr.Id-ncr = MovCaja.Id-Ncr 
+                FIND Ncr WHERE Ncr.Id-ncr = bf-MovNormales.Id-Ncr 
                     NO-LOCK NO-ERROR.
                 IF AVAILABLE Ncr AND Ncr.FacGlobal = "" AND 
                     NCR.FecCanc = ? THEN 
                 DO:
-
+                    /*
                     CREATE ttfact.
                     ASSIGN 
                         ttfact.id         = "T"
                         ttfact.Documento  = Ncr.Id-ncr
-                        ttfact.IdSuplente = MovCaja.Turno
+                        ttfact.IdSuplente = bf-MovNormales.Turno
                         ttfact.tty        = "J"
-                        ttfact.IDmc       = MovCaja.Id-Caja.
+                        ttfact.IDmc       = bf-MovNormales.Id-Caja. */
 
                     ASSIGN 
                         wMov.ImpNCred = wMov.ImpNCred + NCR.Subtotal
@@ -340,32 +381,32 @@ PROCEDURE GetDashBoard:
                         l-ivaa        = l-ivaa - Ncr.Iva
                         wMov.Total    = wMov.ImpVentas - wMov.ImpNCred.
 
-                    FIND Cliente WHERE Cliente.Id-cliente = Ncr.Id-cliente
+                 /*   FIND Cliente WHERE Cliente.Id-cliente = Ncr.Id-cliente
                         NO-LOCK NO-ERROR.
                     ASSIGN 
                         ttfact.IdCliente = ncr.id-cliente
                         ttfact.nomcte    = Cliente.RazonSoc
                         ttfact.subtotal  = ncr.subtotal
                         ttfact.iva       = ncr.iva
-                        ttfact.tot       = ncr.tot.
+                        ttfact.tot       = ncr.tot. */
                 END.
 
             END. 
             
-            FIND FIRST DetMovC WHERE DetMovC.Id-Caja = MovCaja.Id-Caja AND
-                DetMovC.Folio   = MovCaja.Folio   AND
+            FIND FIRST DetMovC WHERE DetMovC.Id-Caja = bf-MovNormales.Id-Caja AND
+                DetMovC.Folio   = bf-MovNormales.Folio   AND
                 DetMovC.Id-TP   = 65
                 NO-LOCK NO-ERROR.
             
             IF AVAILABLE DetMovC THEN 
-            DO:
+            DO: /*
                 CREATE ttfact.
                 ASSIGN 
                     ttfact.id         = "T"
-                    ttfact.Documento  = MovCaja.Refer
-                    ttfact.IdSuplente = MovCaja.Turno
+                    ttfact.Documento  = bf-MovNormales.Refer
+                    ttfact.IdSuplente = bf-MovNormales.Turno
                     ttfact.tty        = "J"
-                    ttfact.IDmc       = MovCaja.Id-Caja.
+                    ttfact.IDmc       = bf-MovNormales.Id-Caja. */
                   
                 ASSIGN 
                     wMov.ImpNCred = wMov.ImpNCred + DetMovC.MontoPago
@@ -378,23 +419,30 @@ PROCEDURE GetDashBoard:
     END.
 
     /*Busqueda de Remisiones PostFechadas para Hoy */
-    FOR EACH MovCaja WHERE MovCaja.FecOper  <> l-fecOper AND
-        MovCaja.FecDep     =  l-fecOper    AND
-        MovCaja.Canc       =  FALSE        AND
-        MovCaja.TipoVenta  =  (IF l-tipo = 'Ticket' THEN 1 ELSE 2) AND
-        (IF l-cliente < 3 THEN 
-        (NOT CAN-DO(l-ListSuc,STRING(MovCaja.Id-Caja)))
-        ELSE (CAN-DO(l-ListSuc,STRING(MovCaja.Id-Caja))))
+    FOR EACH bf-MovPostfech WHERE bf-MovPostfech.FecOper  <> l-fecOper AND
+        bf-MovPostfech.FecDep     =  l-fecOper    AND
+        bf-MovPostfech.Canc       =  FALSE        AND
+        bf-MovPostfech.TipoVenta  =  (IF l-tipo = 'Ticket' THEN 1 ELSE 2) 
         NO-LOCK 
         USE-INDEX Idx-Post
-        BREAK BY MovCaja.Id-caja 
-        BY MovCaja.Turno :
+        BREAK BY bf-MovPostfech.Id-caja 
+        BY bf-MovPostfech.Turno :
+            
+          /* --- Nueva condición usando ttSucursales (reemplazo del CAN-DO) --- */
+        FIND FIRST ttSucursales WHERE ttSucursales.IdSuc = STRING(bf-MovPostfech.Id-Caja) NO-ERROR.
+    
+        /* 
+           - Si l-cliente < 3: QUEREMOS sucursales que NO estén en ttSucursales.
+           - Si l-cliente >= 3: QUEREMOS sucursales que SÍ estén en ttSucursales.
+        */
+        IF (l-cliente < 3 AND AVAILABLE ttSucursales) THEN NEXT.     /* Excluye sucursales de la lista */
+        IF (l-cliente >= 3 AND NOT AVAILABLE ttSucursales) THEN NEXT. /* Excluye sucursales fuera de la lista */    
 
-        IF FIRST-OF(MovCaja.Turno) THEN 
+        IF FIRST-OF(bf-MovPostfech.Turno) THEN 
         DO:
             
-            FIND FIRST wMov WHERE wMov.idcaja = MovCaja.Id-Caja AND
-                wMov.Turno = MovCaja.Turno 
+            FIND FIRST wMov WHERE wMov.idcaja = bf-MovPostfech.Id-Caja AND
+                wMov.Turno = bf-MovPostfech.Turno 
                 NO-LOCK NO-ERROR.
            
             IF NOT AVAILABLE wMov THEN 
@@ -403,21 +451,21 @@ PROCEDURE GetDashBoard:
                 CREATE wMov.
                 ASSIGN 
                     wMov.id       = "T"
-                    wMov.IdCaja   = MovCaja.id-Caja
-                    wMov.Turno    = MovCaja.Turno
+                    wMov.IdCaja   = bf-MovPostfech.id-Caja
+                    wMov.Turno    = bf-MovPostfech.Turno
                     wMov.Selec    = TRUE 
-                    wMov.Concepto = "C" + STRING(MovCaja.Id-Caja) + "  T" +
-                                           STRING(MovCaja.Turno).
+                    wMov.Concepto = "C" + STRING(bf-MovPostfech.Id-Caja) + "  T" +
+                                           STRING(bf-MovPostfech.Turno).
             END.
         END.
 
-        FIND Remision WHERE Remision.Id-Remision = MovCaja.Referencia AND
-            Remision.TipoVenta = MovCaja.TipoVenta 
+        FIND Remision WHERE Remision.Id-Remision = bf-MovPostfech.Referencia AND
+            Remision.TipoVenta = bf-MovPostfech.TipoVenta 
             NO-LOCK NO-ERROR.
         IF AVAILABLE Remision THEN 
         DO:
             
-            IF MovCaja.FecDep <= MovCaja.FecOper THEN 
+            IF bf-MovPostfech.FecDep <= bf-MovPostfech.FecOper THEN 
                 NEXT.
            
             IF Remision.FacGlobal <> "" THEN 
@@ -426,14 +474,14 @@ PROCEDURE GetDashBoard:
             IF l-tipo = 'Remision' /*AND Remision.Folioe <> ""*/ THEN NEXT.
             /*IF l-tipo = 'Electronica' AND Remision.Folioe = "" THEN NEXT.*/
            
-            CREATE ttfact.
+           /* CREATE ttfact.
            
             ASSIGN 
                 ttfact.id         = "T"
                 ttfact.Documento  = Remision.Id-Remision
-                ttfact.IdSuplente = MovCaja.Turno
+                ttfact.IdSuplente = bf-MovPostfech.Turno
                 ttfact.tty        = "J"
-                ttfact.IDmc       = MovCaja.Id-Caja.
+                ttfact.IDmc       = bf-MovPostfech.Id-Caja. */
 
             ASSIGN 
                 wMov.ImpVentas = wMov.ImpVentas + Remision.Tot - Remision.Iva
@@ -445,32 +493,32 @@ PROCEDURE GetDashBoard:
                 wMov.Total     = wMov.ImpVentas - wMov.ImpNCred.
            
 
-            FIND Cliente WHERE Cliente.Id-cliente = Remision.Id-cliente
+         /*   FIND Cliente WHERE Cliente.Id-cliente = Remision.Id-cliente
                 NO-LOCK NO-ERROR.
             ASSIGN 
                 ttfact.IdCliente = Remision.Id-cliente
                 ttfact.nomcte    = cliente.razonsocial
                 ttfact.subtotal  = remision.Tot - remision.iva
                 ttfact.iva       = remision.iva
-                ttfact.tot       = Remision.Tot.
+                ttfact.tot       = Remision.Tot. */
      
-            IF MovCaja.Id-ncr <> "" THEN 
+            IF bf-MovPostfech.Id-ncr <> "" THEN 
             DO:
                 
-                FIND Ncr WHERE Ncr.Id-ncr = MovCaja.Id-Ncr 
+                FIND Ncr WHERE Ncr.Id-ncr = bf-MovPostfech.Id-Ncr 
                     NO-LOCK NO-ERROR.
                 IF AVAILABLE Ncr AND 
                     Ncr.FacGlobal = "" AND 
                     NCR.FecCanc = ? THEN 
                 DO:
-                    
+                    /*
                     CREATE ttfact.
                     ASSIGN 
                         ttfact.id         = "T"
                         ttfact.Documento  = Ncr.Id-ncr
-                        ttfact.IdSuplente = MovCaja.Turno
+                        ttfact.IdSuplente = bf-MovPostfech.Turno
                         ttfact.tty        = "J"
-                        ttfact.IDmc       = MovCaja.Id-Caja.
+                        ttfact.IDmc       = bf-MovPostfech.Id-Caja. */
                     
                     ASSIGN 
                         wMov.ImpNCred = wMov.ImpNCred + NCR.Subtotal
@@ -479,7 +527,7 @@ PROCEDURE GetDashBoard:
                         l-ivaa        = l-ivaa - Ncr.Iva
                         wMov.Total    = wMov.ImpVentas - wMov.ImpNCred.
 
-                    FIND Cliente WHERE Cliente.Id-cliente = Ncr.Id-cliente
+                /*    FIND Cliente WHERE Cliente.Id-cliente = Ncr.Id-cliente
                         NO-LOCK NO-ERROR.
                     ASSIGN 
                         ttfact.id        = "T"
@@ -487,30 +535,36 @@ PROCEDURE GetDashBoard:
                         ttfact.nomcte    = Cliente.RazonSoc
                         ttfact.subtotal  = ncr.subtotal
                         ttfact.iva       = ncr.iva
-                        ttfact.tot       = ncr.tot.
+                        ttfact.tot       = ncr.tot. */
                 END.
             END.   
         END.
     END.
    
     /* Busqueda de Devoluciones de Efectivo */
-    FOR EACH MovCaja WHERE MovCaja.FecOper   = l-fecoper AND
-        MovCaja.Canc      = FALSE     AND 
-        (MovCaja.TipoVenta = 4 OR MovCaja.TipoVenta = 8 OR MovCaja.TipoVenta = 9)  AND
-        (IF l-cliente < 3 THEN 
-        (NOT CAN-DO(l-ListSuc,STRING(MovCaja.Id-Caja)))
-        ELSE (CAN-DO(l-ListSuc,STRING(MovCaja.Id-Caja))))
-
+    FOR EACH bf-MovDevol WHERE bf-MovDevol.FecOper   = l-fecoper AND
+        bf-MovDevol.Canc      = FALSE     AND 
+        (bf-MovDevol.TipoVenta = 4 OR bf-MovDevol.TipoVenta = 8 OR bf-MovDevol.TipoVenta = 9)
         NO-LOCK 
         USE-INDEX Idx-Fec
-        BREAK BY MovCaja.Id-Caja 
-        BY MovCaja.Turno:
+        BREAK BY bf-MovDevol.Id-Caja 
+        BY bf-MovDevol.Turno:   
+            
+          /* --- Nueva condición usando ttSucursales (reemplazo del CAN-DO) --- */
+        FIND FIRST ttSucursales WHERE ttSucursales.IdSuc = STRING(bf-MovDevol.Id-Caja) NO-ERROR.
+    
+        /* 
+           - Si l-cliente < 3: QUEREMOS sucursales que NO estén en ttSucursales.
+           - Si l-cliente >= 3: QUEREMOS sucursales que SÍ estén en ttSucursales.
+        */
+        IF (l-cliente < 3 AND AVAILABLE ttSucursales) THEN NEXT.     /* Excluye sucursales de la lista */
+        IF (l-cliente >= 3 AND NOT AVAILABLE ttSucursales) THEN NEXT. /* Excluye sucursales fuera de la lista */    
 
-        IF FIRST-OF(MovCaja.Turno) THEN 
+        IF FIRST-OF(bf-MovDevol.Turno) THEN 
         DO:
            
-            FIND FIRST wMov WHERE wMov.IdCaja = MovCaja.Id-Caja AND
-                wMov.Turno = MovCaja.Turno 
+            FIND FIRST wMov WHERE wMov.IdCaja = bf-MovDevol.Id-Caja AND
+                wMov.Turno = bf-MovDevol.Turno 
                 NO-LOCK NO-ERROR.
             IF NOT AVAILABLE wMov THEN 
             DO:
@@ -518,17 +572,17 @@ PROCEDURE GetDashBoard:
                 CREATE wMov.
                 ASSIGN 
                     wMov.id       = "T"
-                    wMov.IdCaja   = MovCaja.id-Caja
-                    wMov.Turno    = MovCaja.Turno
-                    wMov.Concepto = "C" + STRING(MovCaja.Id-Caja) + "  T" +
-                                           STRING(MovCaja.Turno).
+                    wMov.IdCaja   = bf-MovDevol.id-Caja
+                    wMov.Turno    = bf-MovDevol.Turno
+                    wMov.Concepto = "C" + STRING(bf-MovDevol.Id-Caja) + "  T" +
+                                           STRING(bf-MovDevol.Turno).
             END.
         END.
         
-        IF movcaja.tipoventa = 4 THEN 
+        IF bf-MovDevol.tipoventa = 4 THEN 
         DO:
             
-            FIND Devolucion WHERE Devolucion.Id-Dev = INT(MovCaja.Referencia)
+            FIND Devolucion WHERE Devolucion.Id-Dev = INT(bf-MovDevol.Referencia)
                 NO-LOCK NO-ERROR.
             
             IF AVAILABLE Devolucion THEN 
@@ -538,7 +592,7 @@ PROCEDURE GetDashBoard:
                 ELSE 2) THEN
                     NEXT.
            
-                FIND Ncr WHERE Ncr.Id-Ncr = MovCaja.Id-ncr 
+                FIND Ncr WHERE Ncr.Id-Ncr = bf-MovDevol.Id-ncr 
                     NO-LOCK NO-ERROR.
            
                 IF Ncr.facGlobal <> '' THEN 
@@ -552,14 +606,14 @@ PROCEDURE GetDashBoard:
 
                 IF NOT AVAILABLE ttfact THEN 
                 DO:
-                
+                    /*
                     CREATE ttfact.
                     ASSIGN 
                         ttfact.id         = "T"
                         ttfact.Documento  = Ncr.Id-ncr
-                        ttfact.IdSuplente = MovCaja.Turno
+                        ttfact.IdSuplente = bf-MovDevol.Turno
                         ttfact.tty        = "J"
-                        ttfact.IDmc       = MovCaja.Id-Caja.
+                        ttfact.IDmc       = bf-MovDevol.Id-Caja. */
 
                     ASSIGN 
                         wMov.ImpNCred = wMov.ImpNCred + Devolucion.Tot - Devolucion.Iva
@@ -569,21 +623,21 @@ PROCEDURE GetDashBoard:
                         wMov.Total    = wMov.ImpVentas - wMov.ImpNCred.
 
 
-                    FIND Cliente WHERE Cliente.Id-cliente = Ncr.Id-cliente
+                 /*   FIND Cliente WHERE Cliente.Id-cliente = Ncr.Id-cliente
                         NO-LOCK NO-ERROR.
                     ASSIGN 
                         ttfact.IdCliente = ncr.id-cliente
                         ttfact.nomcte    = Cliente.RazonSoc
                         ttfact.subtotal  = ncr.subtotal
                         ttfact.iva       = ncr.iva
-                        ttfact.tot       = ncr.tot.
+                        ttfact.tot       = ncr.tot. */  
                 END.
             END.
         END.
         ELSE 
         DO:
             
-            FIND NCR WHERE NCR.Id-ncr = MovCaja.Referencia 
+            FIND NCR WHERE NCR.Id-ncr = bf-MovDevol.Referencia 
                 NO-LOCK NO-ERROR.
         
             IF AVAILABLE NCR THEN 
@@ -613,7 +667,7 @@ PROCEDURE GetDashBoard:
                         NO-LOCK NO-ERROR.
                
                     IF AVAILABLE B-Mov AND B-Mov.FecOper >= B-Mov.FecDep OR
-                        MovCaja.Referencia = '001570M' THEN 
+                        bf-MovDevol.Referencia = '001570M' THEN 
                     DO:
                   
 
@@ -623,15 +677,15 @@ PROCEDURE GetDashBoard:
                             NO-LOCK NO-ERROR.
                         
                         IF NOT AVAILABLE ttfact THEN 
-                        DO:
+                        DO: /*
                             CREATE ttfact.
                         
                             ASSIGN 
                                 ttfact.id         = "T"
                                 ttfact.Documento  = Ncr.Id-ncr
-                                ttfact.IdSuplente = MovCaja.Turno
+                                ttfact.IdSuplente = bf-MovDevol.Turno
                                 ttfact.tty        = "J"
-                                ttfact.IDmc       = MovCaja.Id-Caja.
+                                ttfact.IDmc       = bf-MovDevol.Id-Caja. */
                         
                             ASSIGN 
                                 wMov.ImpNCred = wMov.ImpNCred + NCR.Subtotal
@@ -640,14 +694,14 @@ PROCEDURE GetDashBoard:
                                 l-ivaa        = l-ivaa - NCR.Iva
                                 wMov.Total    = wMov.ImpVentas - wMov.ImpNCred.
     
-                            FIND Cliente WHERE Cliente.Id-cliente = Ncr.Id-cliente
+                         /*   FIND Cliente WHERE Cliente.Id-cliente = Ncr.Id-cliente
                                 NO-LOCK NO-ERROR.
                             ASSIGN 
                                 ttfact.IdCliente = ncr.id-cliente
                                 ttfact.nomcte    = Cliente.RazonSoc
                                 ttfact.subtotal  = ncr.subtotal
                                 ttfact.iva       = ncr.iva
-                                ttfact.tot       = ncr.tot.
+                                ttfact.tot       = ncr.tot. */
                         END.
                     END.
                 END.
@@ -659,15 +713,15 @@ PROCEDURE GetDashBoard:
                         NO-LOCK NO-ERROR.
                     
                     IF NOT AVAILABLE ttfact THEN 
-                    DO:
-                        CREATE ttfact.
+                    DO: /*
+                        CREATE ttfact.   
                     
                         ASSIGN 
                             ttfact.id         = "T"
                             ttfact.Documento  = Ncr.Id-ncr
-                            ttfact.IdSuplente = MovCaja.Turno
+                            ttfact.IdSuplente = bf-MovDevol.Turno
                             ttfact.tty        = "J"
-                            ttfact.IDmc       = MovCaja.Id-Caja.
+                            ttfact.IDmc       = bf-MovDevol.Id-Caja. */
                     
                         ASSIGN 
                             wMov.ImpNCred = wMov.ImpNCred + NCR.Subtotal
@@ -676,14 +730,14 @@ PROCEDURE GetDashBoard:
                             l-ivaa        = l-ivaa - NCR.Iva
                             wMov.Total    = wMov.ImpVentas - wMov.ImpNCred.
 
-                        FIND Cliente WHERE Cliente.Id-cliente = Ncr.Id-cliente
+                      /*  FIND Cliente WHERE Cliente.Id-cliente = Ncr.Id-cliente
                             NO-LOCK NO-ERROR.
                         ASSIGN 
                             ttfact.IdCliente = ncr.id-cliente
                             ttfact.nomcte    = Cliente.RazonSoc
                             ttfact.subtotal  = ncr.subtotal
                             ttfact.iva       = ncr.iva
-                            ttfact.tot       = ncr.tot.
+                            ttfact.tot       = ncr.tot. */
                     END.
                 END.
             END.
@@ -712,22 +766,5 @@ PROCEDURE GetDashBoard:
         l-tot      LABEL 'Tot'
         l-redo     LABEL 'Don' */   
         
-    RETURN.                      
-END PROCEDURE.
-
-PROCEDURE PostFactura:
-    /*------------------------------------------------------------------------------
-     Purpose:
-     Notes:
-    ------------------------------------------------------------------------------*/
-    DEFINE INPUT PARAMETER DATASET FOR dsFactura.
-    DEFINE INPUT  PARAMETER l-tipo      AS CHAR.
-    DEFINE INPUT  PARAMETER l-cliente      AS INT.
-    DEFINE OUTPUT PARAMETER Respuesta  AS CHAR. 
-    DEFINE OUTPUT PARAMETER IdError    AS LOGICAL.
-    
-    
-    
-    
-END PROCEDURE.
-
+    RETURN.                         
+END PROCEDURE.   

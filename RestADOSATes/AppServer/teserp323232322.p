@@ -114,6 +114,7 @@ PROCEDURE GetDashBoard:
     DEFINE INPUT  PARAMETER l-fecoper AS DATE.
     DEFINE INPUT  PARAMETER l-tipo      AS CHAR.
     DEFINE INPUT  PARAMETER l-cliente      AS INT.
+    DEFINE OUTPUT  PARAMETER l-response AS INT.
     DEFINE OUTPUT PARAMETER Respuesta  AS CHAR. 
     DEFINE OUTPUT PARAMETER IdError    AS LOGICAL.
     DEFINE OUTPUT PARAMETER DATASET FOR dsFactura.
@@ -311,7 +312,7 @@ PROCEDURE GetDashBoard:
                 NO-LOCK NO-ERROR.
             ASSIGN 
                 ttfact.IdCliente = Remision.Id-cliente
-                ttfact.nomcte    = cliente.razonsocial
+                ttfact.nomcte    = IF AVAILABLE Cliente THEN cliente.razonsocial ELSE ""
                 ttfact.subtotal  = remision.Tot - remision.iva
                 ttfact.iva       = remision.iva
                 ttfact.tot       = Remision.Tot.
@@ -449,12 +450,12 @@ PROCEDURE GetDashBoard:
                 NO-LOCK NO-ERROR.
             ASSIGN 
                 ttfact.IdCliente = Remision.Id-cliente
-                ttfact.nomcte    = cliente.razonsocial
+                ttfact.nomcte    = IF AVAILABLE Cliente THEN cliente.razonsocial ELSE ""
                 ttfact.subtotal  = remision.Tot - remision.iva
                 ttfact.iva       = remision.iva
                 ttfact.tot       = Remision.Tot.
 
-            IF MovCaja.Id-ncr <> "" THEN 
+            IF MovCaja.Id-ncr <> "" THEN   
             DO:
                 
                 FIND Ncr WHERE Ncr.Id-ncr = MovCaja.Id-Ncr 
@@ -696,7 +697,8 @@ PROCEDURE GetDashBoard:
     END.
 
     ASSIGN 
-        l-tot = l-subtotal + l-ivaa.
+        l-tot = l-subtotal + l-ivaa
+        l-response = 200.
     
     CREATE  tttotal.
     ASSIGN 

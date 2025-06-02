@@ -11,6 +11,11 @@
     Created     : Fecha actual   
   ----------------------------------------------------------------------*/
 
+ /*   Ticket TASK 806 - User Story 269 HU02 Cancelacion Ventas
+   1. Quitar los campos[ requisicion y transporte] cambiar 
+      por el campo que indique que la mercancia fue entregada y Devolucion
+      JASS29052025
+  */
 /* ***************************  Definitions  ************************** */
 
 BLOCK-LEVEL ON ERROR UNDO, THROW. /* Manejo de errores global */
@@ -36,7 +41,9 @@ DEFINE TEMP-TABLE ttFactura NO-UNDO
     FIELD Total       AS DECIMAL   FORMAT ">>>,>>9.99" /* Total */ 
     FIELD Requisicion LIKE Factura.requisicion
     FIELD IdTransp    LIKE Factura.id-trasporte
-    FIELD Transporte  AS CHAR.    
+    FIELD Transporte  AS CHAR
+    FIELD Embarcado   AS LOGICAL
+    FIELD Devolucion  AS LOGICAL.    
 
 DEFINE TEMP-TABLE ttDetFactura NO-UNDO
     FIELD IdFactura      AS CHARACTER FORMAT "x(15)" /* Número de factura */
@@ -135,13 +142,15 @@ PROCEDURE GetRefactura:
     DEFINE OUTPUT PARAMETER IdError    AS LOGICAL.
     DEFINE OUTPUT PARAMETER DATASET FOR dsFactura.
     
-    DEF VAR l-SuperUser     AS CHAR NO-UNDO INITIAL 'GEE,FRANC,ALEX,VIVE,ELF'.
+    DEF VAR l-SuperUser     AS CHAR NO-UNDO INITIAL 'GEE,FRANC,ALEX,VIVE,ELF,NJCC'.
     
     DEF VAR l-Permisos      AS CHAR NO-UNDO INITIAL 'MLLR,DLGR'. /* USUARIOS PEDIDOS */
     
-    DEF VAR l-permisosLista AS CHAR NO-UNDO INITIAL "OLDS,MLLR,DLGR,ELF". /* USUARIOS QUE PUEDEN CANCELAR FACT EN DIFERENTE
+    DEF VAR l-permisosLista AS CHAR NO-UNDO INITIAL "OLDS,MLLR,DLGR". /* USUARIOS QUE PUEDEN CANCELAR FACT EN DIFERENTE
                                                                           DIA */
     
+    DEF VAR l-Embarcado  AS LOGICAL NO-UNDO INITIAL FALSE.
+    DEF VAR l-Devolucion AS LOGICAL NO-UNDO INITIAL FALSE.
     
     IF pConfirmar = ? THEN pConfirmar = FALSE.
     /* Validación del Usuario */
@@ -331,7 +340,26 @@ PROCEDURE GetRefactura:
             END.
         END.
     END.
-     
+    
+    /* Se pidio esta validacion que tiene Ventas Solo que ellos no pueden cancelar
+       Tesoria si las cancela, pero no saben si estaba embarcada, se manda el aviso al Front
+       para que coloque mensaje y decidan si cancelan o no  */
+    IF INDEX(l-SuperUser, pIdUser) > 0  THEN 
+    DO:                                       
+
+        FIND FIRST EstPedido WHERE EstPedido.Id-Factura = Factura.Id-Factura
+            AND EstPedido.Estatus >= 6 NO-LOCK NO-ERROR.
+        IF AVAILABLE EstPedido THEN 
+        DO: 
+            ASSIGN
+                l-Embarcado = TRUE.
+            //    Respuesta = "La factura de credito ya fue embarcada, cancelacion no procede."
+            //    IdError   = TRUE.
+          //   RETURN.
+        END.
+    END.      
+    
+    
     IF INDEX(l-Permisos, pIdUser) > 0  THEN 
     DO:
         IF Factura.Pedidos = "" THEN 
@@ -411,7 +439,9 @@ PROCEDURE GetRefactura:
         ttFactura.Total       = Factura.Tot
         ttFactura.Requisicion = Factura.requisicion    
         ttFactura.IdTran      = Factura.Id-Tran
-        ttFactura.Transporte  = IF AVAILABLE Transporte THEN Transporte.Nombre ELSE "".
+        ttFactura.Transporte  = IF AVAILABLE Transporte THEN Transporte.Nombre ELSE ""
+        ttFactura.Embarcado   = l-Embarcado
+        ttFactura.Devolucion  = l-Devolucion.
          
     
     /* Obtener el detalle de los artículos vendidos */  

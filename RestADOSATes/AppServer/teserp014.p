@@ -163,7 +163,7 @@ PROCEDURE GetAcuse:
             AND PagoAcuse.id-tp = 61 NO-LOCK NO-ERROR.
         IF AVAILABLE PagoAcuse THEN 
         DO:
-            IF pIdUser = "gee" THEN 
+            IF pIdUser = "ELF" THEN 
             DO:
                 IF (Acuse.FecDep - 300) > l-Fecha THEN 
                 DO:
@@ -223,19 +223,19 @@ PROCEDURE GetAcuse:
                 RETURN.  
             END.
             /* 2. Lógica específica para usuario GEE */
-            IF pIdUser = 'GEE' THEN 
+            IF pIdUser = 'ELF' OR pIdUser ='NJCC' THEN     
             DO:
                 IF pConfirmar = FALSE THEN 
                 DO:
                     /* Primera vez - Pedir confirmación */
-                    ASSIGN 
-                        Respuesta = 'El acuse ya fue depositado. ¿Desea modificar la fecha de deposito?'
-                        IdError   = TRUE.
+                    ASSIGN    
+                        Respuesta = 'El acuse ya fue depositado.¿Desea modificar la fecha de deposito?'
+                        IdError   = TRUE.   
                     RETURN.
                 END.
             /* Si pConfirmar = TRUE, continúa sin mostrar mensaje */
             END.
-            ELSE 
+            ELSE   
             DO:
                 /* Para otros usuarios, mostrar mensaje y salir */
                 ASSIGN
@@ -355,7 +355,7 @@ PROCEDURE PostDepAcuse:
     DEFINE INPUT  PARAMETER pConfirmar AS LOGICAL NO-UNDO INITIAL FALSE. /* Confirmación del usuario */
     DEFINE INPUT PARAMETER l-Fecha AS DATE.
     DEFINE OUTPUT PARAMETER Respuesta  AS CHARACTER. 
-    DEFINE OUTPUT PARAMETER IdError    AS LOGICAL.
+    DEFINE OUTPUT PARAMETER IdError    AS LOGICAL.   
     
     
     IF pConfirmar = ? THEN pConfirmar = FALSE .
@@ -480,14 +480,14 @@ PROCEDURE PostDepAcuse:
                 RETURN.  
             END.
             /* 2. Lógica específica para usuario GEE */
-            IF pIdUser = 'GEE' THEN 
-            DO:
+            IF pIdUser = 'ELF' OR pIdUser = 'NJCC' THEN 
+            DO:  
                 IF pConfirmar = FALSE THEN 
                 DO:
                     /* Primera vez - Pedir confirmación */
                     ASSIGN 
-                        Respuesta = 'El acuse ya fue depositado. ¿Desea modificar la fecha de deposito?'
-                        IdError   = TRUE.
+                        Respuesta = 'El acuse ya fue depositado¿Desea modificar la fecha de deposito?'
+                        IdError   = TRUE. 
                     RETURN.
                 END.
             /* Si pConfirmar = TRUE, continúa sin mostrar mensaje */
@@ -591,8 +591,8 @@ PROCEDURE PostDepAcuse:
             END. /* IF AVAILABLE Acuse */
         
         ASSIGN 
-            Respuesta = 'El acuse ya fue depositadoO.'
-            IdError   = TRUE.
+            Respuesta = 'El Acuse fue depositado correctamente'  
+            IdError   = FALSE.
         RETURN.
 
 END PROCEDURE.
