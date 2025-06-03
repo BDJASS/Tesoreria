@@ -126,7 +126,7 @@ DEF    VAR      l-Seguro     LIKE l-Flete NO-UNDO.
 DEF    VAR      l-titulo     AS CHAR.
 DEF    VAR      l-saldo      LIKE MovCliente.Saldo.
 DEF    VAR      l-resp       AS LOGICAL   FORMAT 'Si/No'.
-DEF    VAR      l-factura    LIKE Factura.Id-Factura.
+DEF    VAR      l-factura    LIKE Factura.Id-Factura.  
 /* **********************  Internal Procedures  *********************** */
 
 

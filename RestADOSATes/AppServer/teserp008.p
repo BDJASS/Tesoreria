@@ -101,48 +101,44 @@ DEFINE DATASET dsFactura FOR ttAcuse, ttDetAcuse,ttDetPago
 
 
 DEFINE BUFFER bf_Acuse FOR Acuse.
-
-
-PROCEDURE "cxca0241.p":
+PROCEDURE DesafectarAcuseTipoNP:
     /*------------------------------------------------------------------------------
-     Purpose: DESAFECTA ACUSES    Acuse.Tipo = "N" OR Acuse.Tipo = "P"
-     Notes:   cxca0240.p
+     Purpose: Desafectar acuses de tipo N o P (Normal o Postfechado)
+     Parameters:
+        piIdAcuse - ID del acuse a desafectar
+        pdFecDep - Fecha de depósito (opcional)
+        cxca0240.p  --> cxca0241.p  --> cxca0243.i
     ------------------------------------------------------------------------------*/
-    /*
-      Empresa  : Consultoria en Informatica Ejecutiva, S.A. de C.V.
-      Modulo   : Cuentas por Cobrar
-      Programa : cxca0243.i
-      Funcion  : Accion del boton de Desafectar Acuse
-      Autor    : IOC
-      Fecha    : 22-10-1996
-    */
-    DEF INPUT PARAMETER  l-AcuseR AS RECID NO-UNDO.
-    DEFINE VAR l-Acu1 LIKE Acuse.Id-Acuse.
-
-    DEF BUFFER MovCliente_bf FOR MovCliente.
-    DEF VAR l-deposito AS DATE.
-    DEF VAR l-ren      AS INT     NO-UNDO.
-    DEF VAR l-rec      AS RECID.
-    DEF VAR l-estatus  AS INTEGER FORMAT '9'.
-    DEF VAR l-recpf    AS RECID.
-
-    FIND Acuse WHERE RECID(Acuse) = l-AcuseR NO-LOCK NO-ERROR.
-    ASSIGN 
-        l-Acu1     = Acuse.Id-Acuse
-        l-deposito = TODAY
-        l-estatus  = 0
-        l-rec      = 0.
-
-    MESSAGE "Procesando DESAFECTACION TIPO N-P" +  STRING(l-AcuseR) + STRING(l-Acu1) VIEW-AS ALERT-BOX.    
+    DEFINE INPUT PARAMETER piIdAcuse AS CHARACTER NO-UNDO.
+    DEFINE INPUT PARAMETER pdFecDep AS DATE NO-UNDO. /* Puede ser ? si no aplica */
     
-
-    DO TRANSACTION :  
-        /* Checa si existen cheques para cambiarlos a postfechados */
-
-       // FOR EACH PagoAcuse OF Acuse NO-LOCK :
-            FOR EACH PagoAcuse where PagoAcuse.Id-Acuse = l-Acu1 NO-LOCK:
+    DEFINE VARIABLE l-recpf    AS RECID     NO-UNDO.
+    DEFINE VARIABLE l-rec      AS RECID     NO-UNDO.
+    DEFINE VARIABLE l-ren      AS INTEGER   NO-UNDO.
+    DEFINE VARIABLE l-deposito AS DATE      NO-UNDO.
+    DEFINE VARIABLE l-Acuse    AS CHARACTER NO-UNDO.
+    
+    /* Inicialización de variables */
+    ASSIGN 
+        l-deposito = IF pdFecDep = ? THEN TODAY ELSE pdFecDep
+        l-Acuse    = piIdAcuse.
+    
+    /* Bloque principal de transacción */
+    DO TRANSACTION ON ERROR UNDO, LEAVE ON ENDKEY UNDO, LEAVE:
+        /* Buscar el acuse con lock exclusivo */
+        FIND Acuse WHERE Acuse.Id-Acuse = piIdAcuse EXCLUSIVE-LOCK NO-ERROR.
+        IF NOT AVAILABLE Acuse THEN 
+            RETURN ERROR "Acuse no encontrado".
+        
+        /* Validar que sea tipo N o P */
+        IF Acuse.Tipo <> "N" AND Acuse.Tipo <> "P" THEN
+            RETURN ERROR "Proceso solo para acuses tipo N o P".
+        
+        /* 1. Procesamiento de cheques postfechados */
+        FOR EACH PagoAcuse OF Acuse NO-LOCK:
             FIND TipoPago OF PagoAcuse NO-LOCK NO-ERROR.
             IF NOT TipoPago.Descr MATCHES '*CHEQUE*' THEN NEXT.
+            
             IF PagoAcuse.FecCheque <> ? THEN 
             DO:
                 FIND FIRST ChequePF WHERE
@@ -151,10 +147,10 @@ PROCEDURE "cxca0241.p":
                     ChequePF.Cheque   = PagoAcuse.Cheque AND
                     ChequePF.FecCheque = PagoAcuse.FecCheque NO-LOCK
                     NO-ERROR.
+                
                 IF AVAILABLE ChequePF THEN 
                 DO:
-                    ASSIGN 
-                        l-recpf = RECID(ChequePF).
+                    l-recpf = RECID(ChequePF).
                     FIND ChequePF WHERE RECID(ChequePF) = l-recpf EXCLUSIVE-LOCK
                         NO-ERROR.
                     ASSIGN 
@@ -174,30 +170,30 @@ PROCEDURE "cxca0241.p":
                         ChequePF.Importe    = PagoAcuse.Importe * PagoAcuse.TC.
                 END.
             END.
-        END.
-        FIND Acuse WHERE Acuse.Id-Acuse = l-Acu1 NO-LOCK NO-ERROR.    
-        /* Se Checa si ya se hizo el Corte de Caja */
+        END. /* FOR EACH PagoAcuse */
+        
+        /* 2. Actualización de corte de caja */
         FIND CtlCaja WHERE
             CtlCaja.Id-Caja = Acuse.Id-Caja AND
             CtlCaja.Turno   = Acuse.Turno   AND
             CtlCaja.FecOper = Acuse.FecOper NO-LOCK NO-ERROR.
-
-        IF AVAILABLE (CtlCaja) AND Ctlcaja.Feccierre <> ? THEN 
+        
+        IF AVAILABLE CtlCaja AND CtlCaja.Feccierre <> ? THEN 
         DO:
-            FOR EACH PagoAcuse WHERE PagoAcuse.Id-Acuse = l-Acu1 NO-LOCK BREAK BY PagoAcuse.Id-Tp:
+            FOR EACH PagoAcuse OF Acuse NO-LOCK BREAK BY PagoAcuse.Id-Tp:
                 ACCUMULATE PagoAcuse.Importe (TOTAL by PagoAcuse.Id-Tp).
-
+                
                 IF LAST-OF(PagoAcuse.Id-Tp) THEN 
-                DO:   
+                DO:
                     FIND FIRST CorteCaja WHERE
                         CorteCaja.Id-Caja = Acuse.Id-Caja AND
                         CorteCaja.Turno   = Acuse.Turno   AND
                         CorteCaja.FecOper = Acuse.FecOper AND
-                        CorteCaja.Id-Tp   = PagoAcuse.Id-Tp NO-LOCK.
-                    IF AVAILABLE (CorteCaja) THEN 
+                        CorteCaja.Id-Tp   = PagoAcuse.Id-Tp NO-LOCK NO-ERROR.
+                    
+                    IF AVAILABLE CorteCaja THEN 
                     DO:
-                        ASSIGN 
-                            l-rec = RECID(CorteCaja).
+                        l-rec = RECID(CorteCaja).
                         FIND CorteCaja WHERE RECID(CorteCaja) = l-rec EXCLUSIVE-LOCK.
                     END.
                     ELSE 
@@ -209,17 +205,16 @@ PROCEDURE "cxca0241.p":
                             CorteCaja.FecOper = Acuse.FecOper
                             CorteCaja.Id-Tp   = PagoAcuse.Id-Tp.
                     END.
+                    
                     ASSIGN 
                         CorteCaja.TotPagoP = CorteCaja.TotPagoP +
-                                       (ACCUM TOTAL by PagoAcuse.Id-TP
-                                                       PagoAcuse.Importe )
+                                           (ACCUM TOTAL by PagoAcuse.Id-TP PagoAcuse.Importe)
                         CorteCaja.TotPagoN = CorteCaja.TotPagoN -
-                                       (ACCUM TOTAL by PagoAcuse.Id-TP
-                                                       PagoAcuse.Importe ).
-                END.  /* last-of   */
-            END.  /* pagoacuse  */
-        END.    /* AVAILABLE  Corte Caja */
-
+                                           (ACCUM TOTAL by PagoAcuse.Id-TP PagoAcuse.Importe).
+                END. /* last-of */
+            END. /* pagoacuse */
+        END. /* AVAILABLE Corte Caja */   
+        
         IF Acuse.Tipo = 'P' OR Acuse.Tipo = 'N' THEN 
         DO:
 
@@ -334,7 +329,7 @@ PROCEDURE "cxca0241.p":
     END.
 END.      /* End de Acuse Normal y PostFechado */  
  
-FIND Acuse WHERE Acuse.Id-Acuse = l-Acu1 EXCLUSIVE-LOCK NO-ERROR.
+FIND Acuse WHERE Acuse.Id-Acuse = l-Acuse EXCLUSIVE-LOCK NO-ERROR.
 ASSIGN 
     Acuse.Estatus = 1
     Acuse.FecDep  = l-deposito.
@@ -354,39 +349,45 @@ DO:
     END. /* si es de saltillo */
     END.
 END.  
-MESSAGE "Procesando FIN-DESAFECTACION TIPO N-P" + STRING(Acuse.Estatus) VIEW-AS ALERT-BOX.    
+MESSAGE "Procesando FIN-DESAFECTACION TIPO N-P " + STRING(Acuse.Estatus) VIEW-AS ALERT-BOX.   
+END. /* DO TRANSACTION */
+END PROCEDURE. 
 
-RELEASE Acuse.
-END.  /* FIN DE TRANSACCION */
-
-END PROCEDURE.
-
-
-PROCEDURE Cancel1:   
-    /*------------------------------------------------------------------------------
-     Purpose:
-     Notes:
-    ------------------------------------------------------------------------------*/
-    DEF INPUT PARAMETER  l-AcuseS AS RECID NO-UNDO.
-    DEFINE INPUT  PARAMETER pIdUser  AS CHARACTER NO-UNDO. /* Usuario a validar */
-    DEFINE INPUT  PARAMETER pIdUserSol AS CHARACTER NO-UNDO.
-    DEFINE INPUT  PARAMETER pMotivo    AS CHARACTER NO-UNDO.
-    DEFINE OUTPUT PARAMETER vbandera   AS LOGICAL NO-UNDO.
+PROCEDURE CancelarAcuseTipoNP: 
+    /* 
+      Programa : cxca0231.p
+      Llamador : cxca0230.p
+      Funcion  : Cancelar Acuse Tipo 'N' o 'P'.   
+      cxca0231.i
+    */
+    DEFINE INPUT PARAMETER piIdAcuse AS CHARACTER NO-UNDO.
+    DEFINE INPUT PARAMETER pcMotivo AS CHARACTER NO-UNDO.
+    DEFINE INPUT PARAMETER pcIdUser AS CHARACTER NO-UNDO.
+    DEFINE INPUT PARAMETER pcIdUserSol AS CHARACTER NO-UNDO.
+    DEFINE OUTPUT PARAMETER pcRespuesta AS CHARACTER NO-UNDO.
+    DEFINE OUTPUT PARAMETER plError AS LOGICAL NO-UNDO.
     
-    DEFINE VAR l-Acu2 LIKE Acuse.Id-Acuse.
-
+    /* Variables locales */
+    DEFINE VARIABLE l-acuse AS RECID NO-UNDO.
+    DEF    VAR      l-ren   AS INT   NO-UNDO .
+    /* Buscar el acuse */
+    FIND Acuse WHERE Acuse.Id-Acuse = piIdAcuse EXCLUSIVE-LOCK NO-ERROR.
+    IF NOT AVAILABLE Acuse THEN 
+    DO:
+        ASSIGN
+            pcRespuesta = "Acuse no encontrado"
+            plError     = TRUE.
+        RETURN.
+    END.
+    
+    /* Guardar RECID para uso posterior */
     ASSIGN 
-        l-Acuse  = 0
-        vbandera = FALSE.
-    /* BLOQUE PARA CANCELAR ACUSES */
-    MESSAGE "Procesando CANCEL1 TIPO N-P" + STRING(l-AcuseS) VIEW-AS ALERT-BOX.    
- 
-
-            
-         // cxca0231.p  cxca0231.i
-    Proceso:
-    DO TRANSACTION ON ENDKEY UNDO, LEAVE ON ERROR UNDO, LEAVE :
-        FIND Acuse WHERE RECID(Acuse) = l-AcuseS EXCLUSIVE-LOCK NO-ERROR.
+        l-acuse = RECID(Acuse).
+    
+   MESSAGE "Cancelando Acuse tipo N-P " + STRING(pcIdUser) VIEW-AS ALERT-BOX.    
+    
+    DO TRANSACTION ON ERROR UNDO, LEAVE :
+        FIND Acuse WHERE RECID(Acuse) = l-acuse EXCLUSIVE-LOCK NO-ERROR.
         IF Acuse.Id-Origen = "SA" OR Acuse.Id-Acuse MATCHES "*S" OR
             Acuse.Id-Acuse MATCHES "*SA" THEN
             ASSIGN Acuse.Act-Origen = TRUE
@@ -396,11 +397,10 @@ PROCEDURE Cancel1:
             FIND Cliente OF Acuse NO-LOCK NO-ERROR.
             IF AVAILABLE Cliente THEN 
             DO:
-                    {cxca0009.i}   
-                        ASSIGN 
-                            Acuse.Act-Origen = TRUE
-                            Acuse.FecAOrigen = TODAY.
-                    END.
+      {cxca0009.i}
+               ASSIGN Acuse.Act-Origen = TRUE
+                      Acuse.FecAOrigen = TODAY.
+            END.
             END. /* si es de saltillo */
             END.
         END.
@@ -431,10 +431,10 @@ PROCEDURE Cancel1:
                  &renglon = l-ren
                  &fecha   = TODAY }
 
-                    IF DocAcuse.Tipo-Dev = 67 THEN DO:
+             IF DocAcuse.Tipo-Dev = 67 THEN DO:
                 FIND Devolucion WHERE Devolucion.Id-Dev = DocAcuse.Id-Dev
                     NO-LOCK NO-ERROR.
-                            {cxca0006.i
+                    {cxca0006.i
                      &Cliente  = Acuse.Id-Cliente
                      &Importe  = 0
                      &SUbtotal = Devolucion.Subtotal
@@ -481,13 +481,18 @@ PROCEDURE Cancel1:
                  &fecha   = TODAY }
         END.
     END.
-END.   
-    
+END.
+IF Acuse.Estatus = 3 THEN 
+DO:
+    MESSAGE "El Acuse esta Cancelado.".
+    PAUSE 1 NO-MESSAGE .
+END.
 
 /******************************************************************/
 /* Afectar el corte de caja si ya se habia realizado              */
 /******************************************************************/
-FIND CtlCaja WHERE   
+
+FIND CtlCaja WHERE
     CtlCaja.Id-Caja = Acuse.Id-Caja AND
     CtlCaja.Turno   = Acuse.Turno   AND
     CtlCaja.FecOper = Acuse.FecOper NO-LOCK NO-ERROR.
@@ -497,7 +502,7 @@ DO:
     FOR EACH PagoAcuse OF Acuse NO-LOCK BREAK BY PagoAcuse.Id-Tp:
         FIND TipoPago OF PagoAcuse NO-LOCK NO-ERROR.
         IF Acuse.Estatus = 1 THEN
-            ACCUMULATE PagoAcuse.Importe (TOTAL BY PagoAcuse.Id-Tp).
+            ACCUMULATE PagoAcuse.Importe (TOTAL by PagoAcuse.Id-Tp).
         ELSE
             ACCUMULATE PagoAcuse.Importe * 1 (TOTAL BY PagoAcuse.Id-Tp).
 
@@ -529,19 +534,29 @@ DO:
             ASSIGN 
                 CorteCaja.TotPagoP = CorteCaja.TotPagoP -
                           (IF Acuse.Tipo = 'P' THEN
-                          (ACCUM TOTAL BY PagoAcuse.Id-TP PagoAcuse.Importe )
+                          (ACCUM TOTAL by PagoAcuse.Id-TP PagoAcuse.Importe )
                           ELSE 0 )
                 CorteCaja.TotPagoN = CorteCaja.TotPagoN -
                           (IF Acuse.Tipo = 'N' THEN
-                          (ACCUM TOTAL BY PagoAcuse.Id-TP PagoAcuse.Importe * 1)
+                          (ACCUM TOTAL by PagoAcuse.Id-TP PagoAcuse.Importe * 1)
                           ELSE 0 )
                 CorteCaja.TotGasto = CorteCaja.TotGasto - l-totgasto .
             l-totgasto = 0.
         END.  /* last-of   */
     END.  /* pagoacuse  */
 END.
-        
 
+FOR EACH DetNco WHERE
+    DetNco.Referencia = Acuse.Id-Acuse NO-LOCK:
+    FIND NCO OF DetNco NO-LOCK NO-ERROR.
+    IF NCO.FecCanc = ? THEN 
+    DO:
+        ASSIGN
+            pcRespuesta = "El Acuse TIENE asociado NCO por DESC CANCELADOS."
+            plError     = TRUE.
+        RETURN.
+    END.
+END.
 
 FOR EACH w-Fac :
     DELETE w-Fac.
@@ -550,15 +565,11 @@ END.
 /******************************************************************/
 /* Borra los movimientos de clientes                              */
 /******************************************************************/
-FOR EACH DocAcuse OF Acuse NO-LOCK BY DocAcuse.Id-MC
-    ON ERROR UNDO Proceso, LEAVE Proceso
-    ON ENDKEY UNDO Proceso, LEAVE Proceso :
+FOR EACH DocAcuse OF Acuse NO-LOCK BY DocAcuse.Id-MC:
 
     FOR EACH MovCliente WHERE
         MovCliente.RefSaldo = DocAcuse.Documento AND
-        MovCliente.Documento = Acuse.Id-Acuse EXCLUSIVE-LOCK
-        ON ERROR UNDO Proceso, LEAVE Proceso
-        ON ENDKEY UNDO Proceso, LEAVE Proceso :
+        MovCliente.Documento = Acuse.Id-Acuse EXCLUSIVE-LOCK:
 
         FIND FIRST w-Fac WHERE w-Fac.Doc = DocAcuse.Documento AND
             w-Fac.Id-Mc = DocAcuse.Id-mc NO-ERROR.
@@ -596,42 +607,42 @@ END.
 /******************************************************************/
 /* Desafecta saldo de la factura SOLO SI EL ACUSE TIENE ESTATUS 2 */
 /******************************************************************/
-IF Acuse.Estatus = 2 OR Acuse.Estatus = 4 THEN 
-DO:
-    FOR EACH w-Fac ON ERROR UNDO Proceso, LEAVE Proceso
-        ON ENDKEY UNDO Proceso, LEAVE Proceso :
-                {cxca0004.i &Factura = w-Fac.Doc}
-        IF NOT AVAILABLE MovCliente THEN
-            UNDO Proceso, LEAVE Proceso.
-        ELSE 
-        DO:
-            IF MovCliente.Id-Mc <> w-Fac.Id-mc THEN
+ 
+Proceso:
+DO TRANSACTION ON ERROR UNDO, LEAVE:   
+    IF Acuse.Estatus = 2 OR Acuse.Estatus = 4 THEN 
+    DO:
+        FOR EACH w-Fac ON ERROR UNDO Proceso, LEAVE Proceso
+            ON ENDKEY UNDO Proceso, LEAVE Proceso :
+           {cxca0004.i &Factura = w-Fac.Doc}
+            IF NOT AVAILABLE MovCliente THEN
                 UNDO Proceso, LEAVE Proceso.
-            ELSE
-                ASSIGN MovCliente.Saldo = MovCliente.Saldo + w-Fac.Monto.
+            ELSE 
+            DO:
+                IF MovCliente.Id-Mc <> w-Fac.Id-mc THEN
+                    UNDO Proceso, LEAVE Proceso.
+                ELSE
+                    ASSIGN MovCliente.Saldo = MovCliente.Saldo + w-Fac.Monto.
+            END.
+            DELETE w-Fac.
         END.
-        DELETE w-Fac.
+
+        FIND NCR WHERE Ncr.Id-Ncr = Acuse.Id-Ncr EXCLUSIVE-LOCK NO-ERROR.
+        IF AVAILABLE (Ncr) THEN
+            ASSIGN NCR.UsuarioCanc = CAPS(pcIdUser)
+                NCR.FecCanc     = TODAY.
     END.
-
-    FIND NCR WHERE Ncr.Id-Ncr = Acuse.Id-Ncr EXCLUSIVE-LOCK NO-ERROR.
-    IF AVAILABLE (Ncr) THEN
-        ASSIGN NCR.UsuarioCanc = CAPS(pIdUser)
-            NCR.FecCanc     = TODAY.
-END.
-
+END. /* FIN de Proceso */
 /****************************************************/
 /*Borra cheques postfechados                        */
 /****************************************************/
-FOR EACH ChequePF WHERE ChequePF.Id-Acuse = Acuse.Id-Acuse EXCLUSIVE-LOCK
-    ON ERROR UNDO Proceso, LEAVE Proceso
-    ON ENDKEY UNDO Proceso, LEAVE Proceso :
+FOR EACH ChequePF WHERE ChequePF.Id-Acuse = Acuse.Id-Acuse EXCLUSIVE-LOCK:
     DELETE ChequePF.
 END.
 /****************************************************/
 /*Checa si no se pago con Devolucion                */
 /****************************************************/
-FOR EACH PagoAcuse OF Acuse ON ERROR UNDO Proceso, LEAVE Proceso
-    ON ENDKEY UNDO Proceso, LEAVE Proceso :
+FOR EACH PagoAcuse OF Acuse :
     IF PagoAcuse.Id-Dev > 0 THEN 
     DO:
         FIND Devolucion WHERE Devolucion.Id-dev = PagoAcuse.Id-dev
@@ -650,11 +661,10 @@ END.
 
 ASSIGN 
     Acuse.Estatus     = 3   /* ACUSE CANCELADO */
-    Acuse.UsuarioCanc = CAPS(pIdUser)     
+    Acuse.UsuarioCanc = CAPS(pcIdUser)
     Acuse.FecCanc     = TODAY
-    Acuse.UsuarioSol  = CAPS(pIdUserSol)
-    Acuse.Motivo      = pMotivo
-    vbandera          = TRUE.
+    Acuse.UsuarioSol  = CAPS(pcIdUserSol)
+    Acuse.Motivo      = pcMotivo.
 
 /****************************************************/
 /* 2019-09-17 - RNPC - Libera registro DepBanco     */
@@ -675,10 +685,399 @@ DO:
         RELEASE bf-DepBanco.
     END.
 END.
-END. // DO TRANS
+END.
+
     
-           
-END PROCEDURE.
+END PROCEDURE.    
+
+PROCEDURE CancelarAcuseTipoAC: 
+    /* 
+      Programa : cxca0232.p
+      Llamador : cxca0230.p
+      Funcion  : Cancelar Acuse Tipo 'A' o 'C'.
+       cxca0232.i   
+    */
+    DEFINE INPUT PARAMETER piIdAcuse AS CHARACTER NO-UNDO.
+    DEFINE INPUT PARAMETER pcMotivo AS CHARACTER NO-UNDO.
+    DEFINE INPUT PARAMETER pcIdUser AS CHARACTER NO-UNDO.
+    DEFINE INPUT PARAMETER pcIdUserSol AS CHARACTER NO-UNDO.
+    DEFINE OUTPUT PARAMETER pcRespuesta AS CHARACTER NO-UNDO.
+    DEFINE OUTPUT PARAMETER plError AS LOGICAL NO-UNDO.
+    
+    /* Variables locales */
+    DEFINE VARIABLE l-acuse AS RECID NO-UNDO.
+    DEF    VAR      l-ren   AS INT   NO-UNDO .
+    /* Buscar el acuse */
+    FIND Acuse WHERE Acuse.Id-Acuse = piIdAcuse EXCLUSIVE-LOCK NO-ERROR.
+    IF NOT AVAILABLE Acuse THEN 
+    DO:
+        ASSIGN
+            pcRespuesta = "Acuse no encontrado"
+            plError     = TRUE.
+        RETURN.
+    END.
+    
+    /* Guardar RECID para uso posterior */
+    ASSIGN 
+        l-acuse = RECID(Acuse).
+    
+    MESSAGE "Cancelando Acuse tipo A-C " + STRING(pcIdUser) VIEW-AS ALERT-BOX.
+    DO TRANSACTION ON ERROR UNDO, LEAVE:
+        FIND Acuse WHERE RECID(Acuse) = l-acuse EXCLUSIVE-LOCK NO-ERROR.
+        IF Acuse.Estatus <> 3 THEN 
+        DO:
+            IF Acuse.Tipo = 'A' THEN 
+            DO:
+                FIND Anticipo OF Acuse EXCLUSIVE-LOCK NO-ERROR.
+                IF AVAILABLE (Anticipo) THEN 
+                DO:
+                    IF Anticipo.Canc = TRUE THEN 
+                    DO:
+                        ASSIGN
+                            pcRespuesta = "El Anticipo ya fue Cancelado."
+                            plError     = TRUE.
+                        RETURN.
+                    END.
+                    IF Anticipo.ImpAplicado <> 0 THEN 
+                    DO:
+                        ASSIGN
+                            pcRespuesta = "El Anticipo fue Aplicado en Otras Facturas."
+                            plError     = TRUE.
+                        RETURN.
+                    END.
+                    IF Anticipo.ImpDevuelto <> 0 THEN 
+                    DO:
+                         ASSIGN
+                            pcRespuesta = "El Anticipo tiene Devoluciones de Efectivo."
+                            plError     = TRUE.
+                        RETURN.
+                    END.
+                    ASSIGN 
+                        Anticipo.Canc     = TRUE
+                        Acuse.Estatus     = 3
+                        Acuse.UsuarioCanc = CAPS(pcIdUser)
+                        Acuse.FecCanc     = TODAY
+                        Acuse.UsuarioSol  = CAPS(pcIdUserSol)
+                       Acuse.Motivo      = pcMotivo.
+                    IF Acuse.Id-Origen = "SA" OR Acuse.Id-Acuse MATCHES "*S" OR
+                        Acuse.Id-Acuse MATCHES "*SA" THEN
+                        ASSIGN Acuse.Act-Origen = TRUE
+                               Acuse.FecAOrigen = TODAY.
+                    ELSE 
+                    DO:
+                        FIND Cliente OF Acuse NO-LOCK NO-ERROR.
+                        IF AVAILABLE Cliente THEN 
+                        DO:
+            {cxca0009.i}
+                          ASSIGN Acuse.Act-Origen = TRUE
+                                 Acuse.FecAOrigen = TODAY.
+                       END.
+                        END. /* si es de saltillo */
+                        END.
+                    END.
+                    /****************************************************/
+                    /*Borra cheques postfechados                        */
+                    /****************************************************/
+                    FOR EACH ChequePF WHERE ChequePF.Id-Acuse = Acuse.Id-Acuse 
+                        EXCLUSIVE-LOCK:
+                        DELETE ChequePF.
+                    END.
+                END.
+            END.
+            ELSE 
+            DO:
+                ASSIGN 
+                    Acuse.Estatus     = 3   /* ACUSE CANCELADO */
+                    Acuse.UsuarioCanc = CAPS(pcIdUser)
+                    Acuse.FecCanc     = TODAY
+                    Acuse.UsuarioSol  = CAPS(pcIdUserSol)
+                    Acuse.Motivo      = pcMotivo.
+                /****************************************************/
+                /*Borra cheques postfechados                        */
+                /****************************************************/
+                FOR EACH ChequePF WHERE ChequePF.Id-Acuse = Acuse.Id-Acuse 
+                    EXCLUSIVE-LOCK:
+                    DELETE ChequePF.
+                END.
+            END.
+        END.
+    END.  /* DO transaction  */  
+END PROCEDURE.    
+
+PROCEDURE DesafectarAcuseTipoAC: 
+    /*------------------------------------------------------------------------------
+     Purpose: Desafectar acuses de tipo A o C (Anticipo )
+     Parameters:
+        piIdAcuse - ID del acuse a desafectar
+        pdFecDep - Fecha de depósito (opcional)
+        cxca0240.p  --> cxca0242.p  --> cxca0243.i
+    ------------------------------------------------------------------------------*/
+    DEFINE INPUT PARAMETER piIdAcuse AS CHARACTER NO-UNDO.
+    DEFINE INPUT PARAMETER pdFecDep AS DATE NO-UNDO. /* Puede ser ? si no aplica */
+    DEFINE OUTPUT PARAMETER pcRespuesta AS CHARACTER NO-UNDO.
+    DEFINE OUTPUT PARAMETER plError AS LOGICAL NO-UNDO.
+    
+    DEFINE VARIABLE l-recpf    AS RECID     NO-UNDO.
+    DEFINE VARIABLE l-rec      AS RECID     NO-UNDO.
+    DEFINE VARIABLE l-ren      AS INTEGER   NO-UNDO.
+    DEFINE VARIABLE l-deposito AS DATE      NO-UNDO.
+    DEFINE VARIABLE l-Acuse    AS CHARACTER NO-UNDO.
+    /* Inicialización de variables */
+    ASSIGN 
+        l-deposito = IF pdFecDep = ? THEN TODAY ELSE pdFecDep
+        l-Acuse    = piIdAcuse.
+    
+    /* Bloque principal de transacción */
+    DO TRANSACTION ON ERROR UNDO, LEAVE ON ENDKEY UNDO, LEAVE:
+        /* Buscar el acuse con lock exclusivo */
+        FIND Acuse WHERE Acuse.Id-Acuse = piIdAcuse EXCLUSIVE-LOCK NO-ERROR.
+        IF NOT AVAILABLE Acuse THEN 
+            RETURN ERROR "Acuse no encontrado".
+        
+        /* Validar que sea tipo N o P */
+        IF Acuse.Tipo <> "A" AND Acuse.Tipo <> "C" THEN
+            RETURN ERROR "Proceso solo para acuses tipo A o C".  
+        
+        /* 1. Procesamiento de cheques postfechados */
+        FOR EACH PagoAcuse OF Acuse NO-LOCK:
+            FIND TipoPago OF PagoAcuse NO-LOCK NO-ERROR.
+            IF NOT TipoPago.Descr MATCHES '*CHEQUE*' THEN NEXT.
+            
+            IF PagoAcuse.FecCheque <> ? THEN 
+            DO:
+                FIND FIRST ChequePF WHERE
+                    ChequePF.ID-Acuse = Acuse.Id-Acuse AND
+                    ChequePF.Id-Banco = PagoAcuse.Id-Banco AND
+                    ChequePF.Cheque   = PagoAcuse.Cheque AND
+                    ChequePF.FecCheque = PagoAcuse.FecCheque NO-LOCK
+                    NO-ERROR.
+                
+                IF AVAILABLE ChequePF THEN 
+                DO:
+                    l-recpf = RECID(ChequePF).
+                    FIND ChequePF WHERE RECID(ChequePF) = l-recpf EXCLUSIVE-LOCK
+                        NO-ERROR.
+                    ASSIGN 
+                        ChequePF.FecDep = l-deposito.
+                END.
+                ELSE 
+                DO:
+                    CREATE ChequePF.
+                    ASSIGN 
+                        ChequePF.Id-Acuse   = Acuse.Id-Acuse
+                        ChequePF.Id-Caja    = Acuse.Id-Caja
+                        ChequePF.Id-Cliente = Acuse.Id-Cliente
+                        ChequePF.FecCheque  = PagoAcuse.FecCheque
+                        ChequePF.FecDep     = l-deposito
+                        ChequePF.Id-Banco   = PagoAcuse.Id-Banco
+                        ChequePF.Cheque     = PagoAcuse.Cheque
+                        ChequePF.Importe    = PagoAcuse.Importe * PagoAcuse.TC.
+                END.
+            END.
+        END. /* FOR EACH PagoAcuse */
+        
+        /* 2. Actualización de corte de caja */
+        FIND CtlCaja WHERE
+            CtlCaja.Id-Caja = Acuse.Id-Caja AND
+            CtlCaja.Turno   = Acuse.Turno   AND
+            CtlCaja.FecOper = Acuse.FecOper NO-LOCK NO-ERROR.
+        
+        IF AVAILABLE CtlCaja AND CtlCaja.Feccierre <> ? THEN 
+        DO:
+            FOR EACH PagoAcuse OF Acuse NO-LOCK BREAK BY PagoAcuse.Id-Tp:
+                ACCUMULATE PagoAcuse.Importe (TOTAL by PagoAcuse.Id-Tp).
+                
+                IF LAST-OF(PagoAcuse.Id-Tp) THEN 
+                DO:
+                    FIND FIRST CorteCaja WHERE
+                        CorteCaja.Id-Caja = Acuse.Id-Caja AND
+                        CorteCaja.Turno   = Acuse.Turno   AND
+                        CorteCaja.FecOper = Acuse.FecOper AND
+                        CorteCaja.Id-Tp   = PagoAcuse.Id-Tp NO-LOCK NO-ERROR.
+                    
+                    IF AVAILABLE CorteCaja THEN 
+                    DO:
+                        l-rec = RECID(CorteCaja).
+                        FIND CorteCaja WHERE RECID(CorteCaja) = l-rec EXCLUSIVE-LOCK.
+                    END.
+                    ELSE 
+                    DO:
+                        CREATE CorteCaja.
+                        ASSIGN 
+                            CorteCaja.Id-Caja = Acuse.Id-Caja
+                            CorteCaja.Turno   = Acuse.Turno
+                            CorteCaja.FecOper = Acuse.FecOper
+                            CorteCaja.Id-Tp   = PagoAcuse.Id-Tp.
+                    END.
+                    
+                    ASSIGN 
+                        CorteCaja.TotPagoP = CorteCaja.TotPagoP +
+                                           (ACCUM TOTAL by PagoAcuse.Id-TP PagoAcuse.Importe)
+                        CorteCaja.TotPagoN = CorteCaja.TotPagoN -
+                                           (ACCUM TOTAL by PagoAcuse.Id-TP PagoAcuse.Importe).
+                END. /* last-of */
+            END. /* pagoacuse */
+        END. /* AVAILABLE Corte Caja */   
+        
+        IF Acuse.Tipo = 'P' OR Acuse.Tipo = 'N' THEN 
+        DO:
+
+            FOR EACH w-Fac :
+                DELETE w-Fac.
+            END.
+            FOR EACH DocAcuse OF Acuse NO-LOCK :
+
+                IF DocAcuse.ImpPago > 0 THEN 
+                DO:
+                    ASSIGN 
+                        l-ren = IF DocAcuse.Id-Mc = 1 THEN 4         /*AbonoCr*/
+                             ELSE IF DocAcuse.Id-Mc = 2 THEN 7 /*AbonoCo*/
+                                 ELSE 8.                       /*AbonoCh*/
+                    {cxca0006.i
+              &Cliente = Acuse.Id-Cliente
+              &Importe = " ( DocAcuse.ImpPago * -1 ) "
+              &renglon = l-ren
+              &fecha   = TODAY }
+                END.
+                IF DocAcuse.ImpDevol > 0 THEN 
+                DO:
+                    ASSIGN 
+                        l-ren = IF DocAcuse.Id-Mc = 1 THEN 2         /*VentasCr*/
+                            ELSE IF DocAcuse.Id-Mc = 2 THEN 5 /*Cargos*/
+                                ELSE 6.                      /*Chedev*/
+                    {cxca0006.i
+              &Cliente = Acuse.Id-Cliente
+              &Importe = DocAcuse.ImpDevol
+              &renglon = l-ren
+              &fecha   = TODAY }
+
+           IF DocAcuse.Tipo-Dev = 67 THEN DO:
+                FIND Devolucion WHERE Devolucion.Id-Dev = DocAcuse.Id-Dev
+                    NO-LOCK NO-ERROR.
+                    {cxca0006.i
+                     &Cliente  = Acuse.Id-Cliente
+                     &Importe  = 0
+                     &SUbtotal = Devolucion.Subtotal
+                     &renglon  = l-ren
+                     &fecha    = TODAY }
+            END.
+        END.
+        IF DocAcuse.ImpDescEsp > 0 THEN 
+        DO:
+            ASSIGN 
+                l-ren = IF DocAcuse.Id-Mc = 1 THEN 2
+                            ELSE IF DocAcuse.Id-Mc = 2 THEN 5
+                                ELSE 6.
+            {cxca0006.i
+              &Cliente = Acuse.Id-Cliente
+              &Importe = DocAcuse.ImpDescEsp
+              &renglon = l-ren
+              &fecha   = TODAY }
+        END.
+        IF DocAcuse.ImpDescPP > 0 THEN 
+        DO:
+            ASSIGN 
+                l-ren = IF DocAcuse.Id-Mc = 1 THEN 2
+                            ELSE IF DocAcuse.Id-Mc = 2 THEN 5
+                               ELSE 6.
+            {cxca0006.i
+              &Cliente = Acuse.Id-Cliente
+              &Importe = DocAcuse.ImpDescPP
+              &renglon = l-ren
+              &fecha   = TODAY }
+        END.
+        IF DocAcuse.ImpDescAdc > 0 THEN 
+        DO:
+            ASSIGN 
+                l-ren = IF DocAcuse.Id-Mc = 1 THEN 2
+                            ELSE IF DocAcuse.Id-Mc = 2 THEN 5
+                               ELSE 6.
+            {cxca0006.i
+              &Cliente = Acuse.Id-Cliente
+              &Importe = DocAcuse.ImpDescAdc
+              &renglon = l-ren
+              &fecha   = TODAY }
+        END.
+        FOR EACH MovCliente WHERE
+            MovCliente.RefSaldo = DocAcuse.Documento AND
+            MovCliente.Documento = Acuse.Id-Acuse EXCLUSIVE-LOCK :
+
+            FIND FIRST w-Fac WHERE w-Fac.Doc = DocAcuse.Documento AND
+                w-Fac.Id-Mc = DocAcuse.Id-mc NO-ERROR.
+            IF NOT AVAILABLE w-Fac THEN 
+            DO:
+                CREATE w-Fac.
+                ASSIGN 
+                    w-Fac.Id-mc = DocAcuse.Id-mc
+                    w-Fac.Doc   = DocAcuse.Documento.
+            END.
+
+            ASSIGN 
+                w-Fac.Saldo         = w-Fac.Saldo + (MovCliente.Importe * -1)
+                MovCliente.Afectado = FALSE.
+        END.
+    END.
+    /* Desafecta saldo de la factura */
+    FOR EACH w-Fac:
+    {cxca0004.i &Factura = w-Fac.Doc}
+        IF NOT AVAILABLE MovCliente THEN
+            NEXT.
+        ELSE 
+        DO:
+            IF MovCliente.Id-Mc <> w-Fac.Id-mc THEN
+                NEXT.
+            ELSE
+                ASSIGN MovCliente.Saldo = MovCliente.Saldo + w-Fac.Saldo.
+        END.
+        DELETE w-Fac.
+    END.
+END.      /* End de Acuse Normal y PostFechado */  
+ELSE DO:  /* Anticipo */
+IF Acuse.Tipo = 'A' THEN 
+DO:
+    FIND Anticipo WHERE Anticipo.Id-Acuse  = Acuse.Id-Acuse NO-LOCK
+        NO-ERROR.
+    IF Anticipo.ImpAplicado <> 0 THEN 
+    DO: 
+        ASSIGN 
+            pcRespuesta = 'No se permite desafectar. El anticipo fue APLICADO a factura.'
+            plError     = TRUE.
+        RETURN.
+    END.
+    IF Anticipo.ImpDevuelto <> 0 THEN 
+    DO:
+        ASSIGN 
+            pcRespuesta = 'No se permite desafectar.El anticipo fue DEVUELTO al cliente.'
+            plError     = TRUE.
+        RETURN.
+    END.   
+END.      /* End de Acuse de Anticipo */
+END. 
+FIND Acuse WHERE Acuse.Id-Acuse = l-Acuse EXCLUSIVE-LOCK NO-ERROR.
+ASSIGN 
+    Acuse.Estatus = 1
+    Acuse.FecDep  = l-deposito.
+IF Acuse.Id-Origen = "SA" OR Acuse.Id-Acuse MATCHES "*S" OR
+    Acuse.Id-Acuse MATCHES "*SA" THEN
+    ASSIGN Acuse.Act-Origen = TRUE
+        Acuse.FecAOrigen = TODAY.
+ELSE 
+DO:
+    FIND Cliente OF Acuse NO-LOCK NO-ERROR.
+    IF AVAILABLE Cliente THEN 
+    DO:
+    {cxca0009.i}
+            ASSIGN Acuse.Act-Origen = TRUE
+                   Acuse.FecAOrigen = TODAY.
+         END.
+    END. /* si es de saltillo */
+    END.
+END.  
+MESSAGE "Procesando FIN-DESAFECTACION TIPO A-C " + STRING(Acuse.Estatus) VIEW-AS ALERT-BOX.   
+END. /* DO TRANSACTION */
+END PROCEDURE. 
+
+
 
 @openapi.openedge.export(type="REST", useReturnValue="false", writeDataSetBeforeImage="false").
 PROCEDURE GetAcuse:
@@ -1058,18 +1457,132 @@ PROCEDURE CancelAcuse:
                     IdError   = TRUE.
                 RETURN.
             END.
-        END.
-        /*
+            
+            /* Desafectación según tipo de acuse */
+            CASE Acuse.Tipo:
+                WHEN "N" OR 
+                WHEN "P" THEN 
+                RUN DesafectarAcuseTipoNP (INPUT Acuse.Id-Acuse , INPUT Acuse.FecDep).
+                
+                WHEN "A" OR 
+                WHEN "C" THEN 
+                    DO:
+                        RUN DesafectarAcuseTipoAC (INPUT Acuse.Id-Acuse , 
+                            INPUT Acuse.FecDep,
+                            OUTPUT Respuesta,  
+                            OUTPUT IdError).
+                        /* Si hubo error, retornamos inmediatamente con el mensaje del procedure */
+                        IF IdError THEN
+                            RETURN.  
+                    END.
+                OTHERWISE  
+                DO:
+                    ASSIGN
+                        Respuesta = "Tipo de acuse no válido para desafectación."
+                        IdError   = TRUE.
+                    RETURN.
+                END.
+            END CASE.
+        
+            /* Verificar que la desafectación fue exitosa */
+            FIND CURRENT Acuse NO-LOCK NO-ERROR.
+            IF Acuse.Estatus <> 1 THEN 
+            DO: /* Asumiendo que 1 es el estado después de desafectar */
+                ASSIGN
+                    Respuesta = "No se pudo completar la desafectación del acuse."
+                    IdError   = TRUE.
+                RETURN.
+            END.
+        END. /*  Acuse.Estatus = 4 */ 
+        
+        /* Validación CPago antes del bloque de desafectar */
         FIND FIRST CPago WHERE CPago.Id-Acuse = Acuse.Id-Acuse
             AND CPago.FecCanc = ?
             NO-LOCK NO-ERROR.
+
         IF AVAILABLE CPago THEN 
-        DO: 
+        DO:
+            /* Ejecutar proceso completo para CPago */
             RUN /usr2/adosa/procs/tesd0012.p(INPUT CPago.Id-CPago).
+    
+            /* Verificar si el proceso se completó correctamente */
+            FIND CURRENT CPago NO-LOCK NO-ERROR.
+            IF AVAILABLE CPago AND CPago.FecCanc = ? THEN 
+            DO:
+                ASSIGN
+                    Respuesta = "No se pudo completar el proceso para CPago " + CPago.Id-CPago.
+                IdError   = TRUE.
+                RETURN.
+            END.
+    
             RELEASE CPago.
-        END. */ 
+        END.
+        /* Cancelación final según tipo de acuse */
+        CASE Acuse.Tipo:
+            WHEN "N" OR 
+            WHEN "P" THEN 
+            RUN CancelarAcuseTipoNP (
+                INPUT Acuse.Id-Acuse,
+                INPUT pMotivo,
+                INPUT pIdUser,
+                INPUT pIdUserSol,
+                OUTPUT Respuesta,
+                OUTPUT IdError
+                ).
+                
+            WHEN "A" OR 
+            WHEN "C" THEN 
+            RUN CancelarAcuseTipoAC (
+                INPUT Acuse.Id-Acuse,
+                INPUT pMotivo,
+                INPUT pIdUser,
+                INPUT pIdUserSol,
+                OUTPUT Respuesta,
+                OUTPUT IdError
+                ).
+                
+            OTHERWISE 
+            DO:
+                ASSIGN
+                    Respuesta = "Tipo de acuse no válido para cancelación."
+                    IdError   = TRUE.
+                RETURN.
+            END.
+        END CASE.
         
-       
+        /* Si hubo error en la cancelación, retornar */
+        IF IdError THEN
+            RETURN.
+            
+        /* Verificar cancelación exitosa */
+        FIND CURRENT Acuse NO-LOCK NO-ERROR.
+        IF Acuse.Estatus <> 3 THEN 
+        DO: /* Asumiendo que 3 es el estado "cancelado" */
+            ASSIGN
+                Respuesta = "No se pudo completar la cancelación del acuse."
+                IdError   = TRUE.
+            RETURN.
+        END.
+        
+        /* Si todo fue exitoso */
+        ASSIGN
+            Respuesta = "Acuse cancelado de manera exitosa. "
+            IdError   = FALSE.
+            
+        /* Liberar buffers */
+        RELEASE Acuse.
+        RELEASE DocAcuse.
+        RELEASE MovCliente.
+        RELEASE CorteCaja.
+        RELEASE PagoAcuse.
+        RELEASE ChequePF.
+        RELEASE Devolucion.
+        RELEASE NCR.
+        RELEASE CtlCaja.
+        RELEASE TipoPago.
+        RELEASE Cliente.
+        RELEASE DepBanco.    
+            
     END. /* end del available       */
     ELSE 
     DO: 
@@ -1078,171 +1591,7 @@ PROCEDURE CancelAcuse:
             IdError   = TRUE.
         RETURN.
     END. /* end del not available   */
-    
-    /* BLOQUE PARA DEFAFECTAR ACUSES */
-    FIND Acuse WHERE Acuse.Id-Acuse = pIdAcuse NO-LOCK NO-ERROR.
-    IF AVAILABLE Acuse THEN 
-    DO:
-        
-        IF Acuse.Estatus = 4 THEN 
-        DO: 
-            IF Acuse.Tipo = "N" OR Acuse.Tipo = "P" THEN 
-            DO:
-              //  RUN cxca0241.p (INPUT RECID(Acuse)).
-                
-            END.
-
-            IF Acuse.Tipo = "A" OR Acuse.Tipo = 'C' THEN 
-            DO:
-                RUN cxca0242.p (INPUT RECID(Acuse)).
-            END.
-        END. 
-       // RELEASE Acuse.
-    END.
-    /*
-    FIND Acuse WHERE Acuse.Id-Acuse = pIdAcuse NO-LOCK NO-ERROR.
-    IF AVAILABLE Acuse THEN 
-    DO:
-        
-        IF NOT pConfirmar THEN 
-        DO:
-            ASSIGN 
-                Respuesta = "Confirme la cancelacion del Acuse No. " + STRING (Acuse.Id-Acuse).
-            IdError = FALSE.
-            RETURN.
-        END.       
-        */
-        FIND bf_Acuse WHERE bf_Acuse.Id-Acuse = pIdAcuse EXCLUSIVE-LOCK NO-ERROR.
-        ASSIGN 
-            bf_Acuse.Estatus     = 3   /* ACUSE CANCELADO */
-            bf_Acuse.UsuarioCanc = CAPS(pIdUser)     
-            bf_Acuse.FecCanc     = TODAY
-            bf_Acuse.UsuarioSol  = CAPS(pIdUserSol)
-            bf_Acuse.Motivo      = pMotivo
-
-            Respuesta         = "Acuse cancelado de manera exitosa. "
-            IdError           = FALSE.
-        RETURN.  
-        /*
-        RUN Cancel1 (INPUT RECID(Acuse),INPUT pIdUser, INPUT pIdUserSol, INPUT pMotivo,OUTPUT l-bandera).
-        
-        IF l-bandera = TRUE THEN 
-        DO:
-        
-            ASSIGN
-                Respuesta = "Acuse cancelado de manera exitosa. "
-                IdError   = FALSE.
-            RETURN.
-        
-        END. */ 
-    
-  //  END.              
    
-/*
-IF Acuse.Tipo = "A" OR Acuse.Tipo = 'C' THEN 
-DO:  // cxca0232.i
-    IF NOT pConfirmar THEN 
-    DO:
-        ASSIGN 
-            Respuesta = "Confirme la cancelacion del Acuse No. " + STRING (Acuse.Id-Acuse).
-        IdError = FALSE.
-        RETURN.
-    END.          
-    DO TRANSACTION ON ENDKEY UNDO, LEAVE ON ERROR UNDO, LEAVE :
-        FIND Acuse WHERE RECID(Acuse) = l-acuse EXCLUSIVE-LOCK NO-ERROR.
-        IF Acuse.Estatus <> 3 THEN 
-        DO:
-            IF Acuse.Tipo = 'A' THEN 
-            DO:
-                FIND Anticipo OF Acuse EXCLUSIVE-LOCK NO-ERROR.
-                IF AVAILABLE (Anticipo) THEN 
-                DO:
-                    IF Anticipo.Canc = TRUE THEN 
-                    DO: 
-                        ASSIGN
-                            Respuesta = "El Anticipo ya fue Cancelado."
-                            IdError   = TRUE.
-                        RETURN.
-                    END.
-                    IF Anticipo.ImpAplicado <> 0 THEN 
-                    DO:
-                        ASSIGN
-                            Respuesta = "El Anticipo fue Aplicado en Otras Facturas."
-                            IdError   = TRUE.
-                        RETURN.
-                    END.
-                    IF Anticipo.ImpDevuelto <> 0 THEN 
-                    DO:
-                        ASSIGN 
-                            Respuesta = "El Anticipo tiene Devoluciones de Efectivo."
-                            IdError   = TRUE.
-                        RETURN.
-                    END.
-                    ASSIGN 
-                        Anticipo.Canc     = TRUE
-                        Acuse.Estatus     = 3
-                        Acuse.UsuarioCanc = CAPS(pIdUser)
-                        Acuse.FecCanc     = TODAY
-                        Acuse.UsuarioSol  = CAPS(pIdUserSol)
-                        Acuse.Motivo      = pMotivo.
-                    IF Acuse.Id-Origen = "SA" OR Acuse.Id-Acuse MATCHES "*S" OR
-                        Acuse.Id-Acuse MATCHES "*SA" THEN
-                        ASSIGN Acuse.Act-Origen = TRUE
-                            Acuse.FecAOrigen = TODAY.
-                    ELSE 
-                    DO:
-                        FIND Cliente OF Acuse NO-LOCK NO-ERROR.
-                        IF AVAILABLE Cliente THEN 
-                        DO:
-                            {cxca0009.i}
-                            ASSIGN Acuse.Act-Origen = TRUE
-                                Acuse.FecAOrigen = TODAY.
-                        END.
-                        END. /* si es de saltillo */
-                        END.
-                    END.
-                    /****************************************************/
-                    /*Borra cheques postfechados                        */
-                    /****************************************************/
-                    FOR EACH ChequePF WHERE ChequePF.Id-Acuse = Acuse.Id-Acuse 
-                        EXCLUSIVE-LOCK:
-                        DELETE ChequePF.
-                    END.
-                END.
-            END.
-            ELSE 
-            DO:
-                ASSIGN 
-                    Acuse.Estatus     = 3
-                    Acuse.UsuarioCanc = CAPS(pIdUser)
-                    Acuse.FecCanc     = TODAY
-                    Acuse.UsuarioSol  = CAPS(pIdUserSol)
-                    Acuse.Motivo      = pMotivo.
-                /****************************************************/
-                /*Borra cheques postfechados                        */
-                /****************************************************/
-                FOR EACH ChequePF WHERE ChequePF.Id-Acuse = Acuse.Id-Acuse 
-                    EXCLUSIVE-LOCK:
-                    DELETE ChequePF.
-                END.
-            END.
-        END.
-    END.  /* DO transaction  */
-
-    RELEASE Anticipo.
-    IF Acuse.Estatus = 3 THEN  
-    DO:
-        FIND FIRST Empleado WHERE empleado.Iniciales = Acuse.UsuarioCanc NO-LOCK NO-ERROR.
-        ASSIGN
-            Respuesta = "Acuse cancelado correctamente " + STRING(Acuse.FecCanc) +
-                   " por " + (IF AVAILABLE Empleado THEN Empleado.Nombre ELSE Acuse.UsuarioCanc)
-            IdError   = FALSE.
-        RETURN.  
-    END.        
-END. // IF Acuse.Tipo = "A" OR Acuse.Tipo = 'C'  */
-
-
-
 END PROCEDURE.
 
 
