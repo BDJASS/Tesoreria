@@ -20,10 +20,10 @@ BLOCK-LEVEL ON ERROR UNDO, THROW.
 
 
 /* ***************************  Main Block  *************************** */
-DEF    VAR      l-fecvence  AS DATE.
-DEF    VAR      l-ubic      AS CHAR .
+DEF    VAR      l-fecvence  AS DATE.   
+DEF    VAR      l-ubic      AS CHAR . 
 DEF    VAR      l-recmov    AS RECID.
-DEFINE VAR      l-folio     LIKE Factura.id-factura.
+DEFINE VAR      l-folio     LIKE Factura.id-factura.  
 DEFINE VAR      l-descr     AS CHARACTER FORMAT 'X(10)'.
 DEFINE VAR      l-opcion    AS CHAR      EXTENT 3 INITIAL ['TICKET','REMISION','ELECTRONICA'] FORMAT 'X(11)'.
 DEFINE VAR      l-subtotal  AS DECIMAL   DECIMALS 2 FORMAT 'Z,ZZZ,ZZ9.99-'.

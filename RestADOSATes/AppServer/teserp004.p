@@ -18,7 +18,7 @@ BLOCK-LEVEL ON ERROR UNDO, THROW. /* Manejo de errores global */
 DEFINE NEW SHARED VARIABLE g-Origen AS CHARACTER NO-UNDO INITIAL "02B".
 /* **********************  Internal Procedures  *********************** */
 DEFINE            VARIABLE l-titulo AS CHARACTER.
-DEFINE BUFFER g-Folio      FOR Folio.
+DEFINE BUFFER g-Folio      FOR Folio. 
 DEFINE BUFFER b-movcaja    FOR MovCaja.
 DEFINE BUFFER bfDevolucion FOR Devolucion.
 DEFINE BUFFER bfNCR        FOR NCR.

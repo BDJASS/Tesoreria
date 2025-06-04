@@ -21,7 +21,7 @@
 
 BLOCK-LEVEL ON ERROR UNDO, THROW. /* Manejo de errores global */
 
-DEFINE TEMP-TABLE ttFactura NO-UNDO              
+DEFINE TEMP-TABLE ttFactura NO-UNDO                              
     FIELD IdFactura   AS CHARACTER FORMAT "x(15)" /* Número de factura */
     FIELD IdCliente   AS INTEGER                  /* Número de cliente */
     FIELD FecReg      AS DATE                     /* Fecha de registro */

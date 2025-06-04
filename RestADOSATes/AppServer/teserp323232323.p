@@ -1,7 +1,7 @@
 @openapi.openedge.export FILE(type="REST", executionMode="single-run", useReturnValue="false", writeDataSetBeforeImage="false").
 /*------------------------------------------------------------------------
     File        : teserp001.p
-    Purpose     : 
+    Purpose     : V2
 
     Syntax      :/TesDashboard
 
@@ -21,9 +21,9 @@ BLOCK-LEVEL ON ERROR UNDO, THROW.
 
 /* ***************************  Main Block  *************************** */
 DEF    VAR      l-fecvence  AS DATE.
-DEF    VAR      l-ubic      AS CHAR .
+DEF    VAR      l-ubic      AS CHAR .     
 DEF    VAR      l-recmov    AS RECID.
-DEFINE VAR      l-folio     LIKE Factura.id-factura.
+DEFINE VAR      l-folio     LIKE Factura.id-factura.   
 DEFINE VAR      l-descr     AS CHARACTER FORMAT 'X(10)'.
 DEFINE VAR      l-opcion    AS CHAR      EXTENT 3 INITIAL ['TICKET','REMISION','ELECTRONICA'] FORMAT 'X(11)'.
 DEFINE VAR      l-subtotal  AS DECIMAL   DECIMALS 2 FORMAT 'Z,ZZZ,ZZ9.99-'.
@@ -35,7 +35,7 @@ DEFINE VAR      l-impredo   AS LOGICAL.
 DEFINE VAR      l-descuento AS DECIMAL   DECIMALS 2.
 DEFINE VAR      l-neto      AS DECIMAL   DECIMALS 2 FORMAT 'Z,ZZZ,ZZ9.99-'.
 DEFINE VAR      l-reng      AS INTEGER.
-DEFINE VAR      l-cont      AS INTEGER.
+DEFINE VAR      l-cont      AS INTEGER.       
 DEFINE VAR      l-factura   AS CHAR.
 DEFINE VAR      l-concepto  AS CHAR.
 DEFINE VAR      l-vendedor  LIKE Vendedor.Id-Vendedor.
