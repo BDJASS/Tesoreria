@@ -17,28 +17,28 @@ BLOCK-LEVEL ON ERROR UNDO, THROW. /* Manejo de errores global */
 
 DEFINE NEW SHARED VARIABLE g-Origen AS CHARACTER NO-UNDO INITIAL "02B".
 /* **********************  Internal Procedures  *********************** */
-DEFINE VARIABLE l-titulo AS CHARACTER.
-    DEFINE BUFFER g-Folio      FOR Folio.
-    DEFINE BUFFER b-movcaja    FOR MovCaja.
-    DEFINE BUFFER bfDevolucion FOR Devolucion.
-    DEFINE BUFFER bfNCR        FOR NCR.
-    DEFINE BUFFER bfMovCaja    FOR MovCaja.
-    DEFINE BUFFER bfEstPedido  FOR EstPedido.
-    DEFINE VARIABLE l-genmov    AS LOGICAL.
-    DEFINE VARIABLE l-consig    AS LOGICAL   NO-UNDO.
-    DEFINE VARIABLE l-recdev    AS RECID     NO-UNDO.
-    DEFINE VARIABLE l-rec       AS RECID     NO-UNDO.
-    DEFINE VARIABLE l-usuario   LIKE Password.Usuario.
-    DEFINE VARIABLE l-saldo     LIKE MovCliente.Saldo.
-    DEFINE VARIABLE l-acuse     LIKE Acuse.id-Acuse.
-    DEFINE VARIABLE l-cantcom   LIKE DetRemis.Cant.
-    DEFINE VARIABLE cp-question AS CHARACTER.
-    DEFINE VARIABLE cp-answer   AS LOGICAL.
-    DEFINE VARIABLE l-cant      LIKE DetRemis.Cant.
-    DEF    VAR      l-fecvence  AS DATE.
-    DEF    VAR      l-ubic      AS CHAR .
-    DEF    VAR      l-recmov    AS RECID.
-    DEF    VAR      l-resp      AS LOGICAL.
+DEFINE            VARIABLE l-titulo AS CHARACTER.
+DEFINE BUFFER g-Folio      FOR Folio.
+DEFINE BUFFER b-movcaja    FOR MovCaja.
+DEFINE BUFFER bfDevolucion FOR Devolucion.
+DEFINE BUFFER bfNCR        FOR NCR.
+DEFINE BUFFER bfMovCaja    FOR MovCaja.
+DEFINE BUFFER bfEstPedido  FOR EstPedido.
+DEFINE VARIABLE l-genmov    AS LOGICAL.
+DEFINE VARIABLE l-consig    AS LOGICAL   NO-UNDO.
+DEFINE VARIABLE l-recdev    AS RECID     NO-UNDO.
+DEFINE VARIABLE l-rec       AS RECID     NO-UNDO.
+DEFINE VARIABLE l-usuario   LIKE Password.Usuario.
+DEFINE VARIABLE l-saldo     LIKE MovCliente.Saldo.
+DEFINE VARIABLE l-acuse     LIKE Acuse.id-Acuse.
+DEFINE VARIABLE l-cantcom   LIKE DetRemis.Cant.
+DEFINE VARIABLE cp-question AS CHARACTER.
+DEFINE VARIABLE cp-answer   AS LOGICAL.
+DEFINE VARIABLE l-cant      LIKE DetRemis.Cant.
+DEF    VAR      l-fecvence  AS DATE.
+DEF    VAR      l-ubic      AS CHAR .
+DEF    VAR      l-recmov    AS RECID.
+DEF    VAR      l-resp      AS LOGICAL.
 
 /* ***************************  Main Procedure *************************** */
 
@@ -84,19 +84,22 @@ PROCEDURE PostCancela:
     IF pMotivo = ? THEN pMotivo = "".
     IF pIdUserSol = ? THEN pIdUserSol = "".
     
-    IF l-tipo <> 1 AND l-tipo <> 2 AND l-tipo <> 3 THEN DO:
-        ASSIGN Respuesta ="Tipo de Documento No Valido"
-               IdError   = TRUE.
+    IF l-tipo <> 1 AND l-tipo <> 2 AND l-tipo <> 3 THEN 
+    DO:
+        ASSIGN 
+            Respuesta = "Tipo de Documento No Valido"
+            IdError   = TRUE.
         RETURN.
     END.    
     
-    IF pMotivo = "" THEN DO:
+    IF pMotivo = "" THEN 
+    DO:
         ASSIGN 
             Respuesta = "Se debe enviar Motivo de Cancelacion."
             IdError   = TRUE.
         RETURN.
     END.
-     FIND Usuario WHERE Usuario.Id-User = pIdUserSol NO-LOCK NO-ERROR.
+    FIND Usuario WHERE Usuario.Id-User = pIdUserSol NO-LOCK NO-ERROR.
     IF NOT AVAILABLE Usuario THEN 
     DO:
         ASSIGN 
@@ -314,7 +317,9 @@ PROCEDURE PostCancela:
         END.
         ASSIGN 
             Remision.FecCancel   = TODAY
-            Remision.UsuarioCanc = CAPS(pIdUser). /*l-usuario*/
+            Remision.UsuarioCanc = CAPS(pIdUser)
+            Remision.UsuarioSol  = CAPS(pIdUserSol)
+            Remision.Motivo      = pMotivo.  
                 
         /* Pago con Devolucon, reactiva devolucion */
         FIND FIRST MovCaja WHERE MovCaja.Referencia = l-factura
@@ -501,8 +506,8 @@ PROCEDURE PostCancela:
     RELEASE DetSPrest.
     RELEASE Pedido.
     RELEASE DetPedido.
-        
-        
+
+    
     /* Cancela el folioe electronica de la Remision */
     FIND Remision WHERE Remision.Id-Remision = l-factura NO-LOCK NO-ERROR.
     IF AVAILABLE Remision AND Remision.FecCancel <> ? AND Remision.Folioe <> ''  THEN 
@@ -511,8 +516,10 @@ PROCEDURE PostCancela:
                                                                           SOLO EN PROD POR WEBSERVICE */
     END.
         
+    STATUS DEFAULT ''.  
     BELL.
-    MESSAGE 'FACTURA CANCELADA.'.
+    ASSIGN
+        Respuesta = 'La factura se ha cancelado de manera exitosa.'.
     PAUSE 2 NO-MESSAGE.
 END. /* if l-tipo <> 3 */
     ELSE DO:
@@ -569,16 +576,16 @@ DO TRANSACTION ON ENDKEY UNDO,LEAVE ON ERROR UNDO,LEAVE:
     IF Factura.FecCancel <> ? THEN 
     DO:
         ASSIGN 
-        Respuesta = 'La Factura ya fue cancelada por otro usuario. '
-        IdError =   TRUE.
+            Respuesta = 'La Factura ya fue cancelada por otro usuario. '
+            IdError   = TRUE.
         RETURN.
     END.
     FIND FIRST DetFactura OF Factura WHERE DetFactura.CantDev > 0 EXCLUSIVE-LOCK NO-ERROR.
     IF AVAILABLE DetFactura AND l-GenMov THEN 
     DO:
         ASSIGN
-        Respuesta ="La Factura no puede cancelarse. " + "Hay Devoluciones de Articulos."
-        IdError =   TRUE.
+            Respuesta = "La Factura no puede cancelarse. " + "Hay Devoluciones de Articulos."
+            IdError   = TRUE.
         RETURN.
     END.
 
@@ -587,8 +594,8 @@ DO TRANSACTION ON ENDKEY UNDO,LEAVE ON ERROR UNDO,LEAVE:
     IF NOT AVAILABLE (MovCliente) THEN 
     DO:
         ASSIGN
-        Respuesta = "No existe este Documento en cartera."
-        IdError =   TRUE.
+            Respuesta = "No existe este Documento en cartera."
+            IdError   = TRUE.
         RETURN.
     END.
 
@@ -606,8 +613,8 @@ DO TRANSACTION ON ENDKEY UNDO,LEAVE ON ERROR UNDO,LEAVE:
     IF l-saldo - MovCliente.Importe <> 0 THEN 
     DO:
         ASSIGN
-        RESPUESTA = "No se permite cancelar la factura si se han recibido abonos."
-        IdError =   TRUE.
+            RESPUESTA = "No se permite cancelar la factura si se han recibido abonos."
+            IdError   = TRUE.
         RETURN.
     END.
 
@@ -863,7 +870,7 @@ END.
 STATUS DEFAULT ''.  
 BELL.
 ASSIGN
-Respuesta = 'La factura se ha cancelado de manera exitosa.'.
+    Respuesta = 'La factura se ha cancelado de manera exitosa.'.
 PAUSE 2 NO-MESSAGE.
     
 IF l-acuse <> '' THEN 
