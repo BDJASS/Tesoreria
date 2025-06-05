@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pidl:description targetNamespace="urn:schemas-progress-com:bpm:appserverbinding:0001" serviceType="wsad:OEAppServerInvoke" xmlns:wsad="urn:schemas-progress-com:bpm:appserverbinding:0001" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:pidl="http://www.progress.com/caf/idl1.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:java="http://www.progress.com/adapters/idl1.0/javatype">
+<pidl:types>
+</pidl:types>
+  <pidl:interface name="com.progress.openedge.pdt.bpminterfaces">
+    <pidl:operation name="movcajatp..GetMovCajaTP" pattern="http://www.progress.com/caf/idl1.0/request-response">
+      <pidl:input messageLabel="lSuc" req="false" type="java:String">
+    </pidl:input>
+      <pidl:input messageLabel="lCaja" req="false" type="java:Integer">
+    </pidl:input>
+      <pidl:input messageLabel="lFecha" req="false" type="java:String">
+    </pidl:input>
+      <pidl:input messageLabel="lTP" req="false" type="java:Integer">
+    </pidl:input>
+      <pidl:input messageLabel="lCheque" req="false" type="java:String">
+    </pidl:input>
+      <pidl:input messageLabel="lMonto" req="false" type="java:BigDecimal">
+    </pidl:input>
+      <pidl:output messageLabel="opcJson" req="false" type="java:String">
+    </pidl:output>
+    </pidl:operation>
+  </pidl:interface>
+  <pidl:binding name="com.progress.openedge.pdt.bpmbindings" interface="wsad:com.progress.openedge.pdt.bpminterfaces" type="urn:schemas-progress-com:bpm:appserverbinding:0001">
+<wsad:Operation isPersistent="false" useFullName="false" executionMode="9">
+<wsad:Name>movcajatp</wsad:Name><wsad:ProcPath></wsad:ProcPath><wsad:ProPath></wsad:ProPath><wsad:ProcExt>p</wsad:ProcExt><wsad:ProcDetail isCustomized="false" usesUnknownDefault="true" useRetVal="false" usesTTMappingDefault="true" IsTTResultSet="true" usesBeforeImageDefault="true" IsMappedToSubmit="false"><wsad:Name>movcajatp</wsad:Name><wsad:HelpString></wsad:HelpString><wsad:InternalProc isExcluded="false" hasBadParams="false"><wsad:Name>GetMovCajaTP</wsad:Name><wsad:ProcType>1</wsad:ProcType><wsad:MethodDetail isCustomized="false" usesUnknownDefault="true" useRetVal="false" usesTTMappingDefault="true" IsTTResultSet="true" usesBeforeImageDefault="false" IsMappedToSubmit="false"><wsad:Name>GetMovCajaTP</wsad:Name><wsad:Parameter allowUnknown="true" ordinal="1" writeXmlBeforeImage="false"><wsad:Name>lSuc</wsad:Name><wsad:OrigName>l-suc</wsad:OrigName><wsad:Type>1</wsad:Type><wsad:Mode>1</wsad:Mode></wsad:Parameter><wsad:Parameter allowUnknown="true" ordinal="2" writeXmlBeforeImage="false"><wsad:Name>lCaja</wsad:Name><wsad:OrigName>l-caja</wsad:OrigName><wsad:Type>4</wsad:Type><wsad:Mode>1</wsad:Mode></wsad:Parameter><wsad:Parameter allowUnknown="true" ordinal="3" writeXmlBeforeImage="false"><wsad:Name>lFecha</wsad:Name><wsad:OrigName>l-Fecha</wsad:OrigName><wsad:Type>1</wsad:Type><wsad:Mode>1</wsad:Mode></wsad:Parameter><wsad:Parameter allowUnknown="true" ordinal="4" writeXmlBeforeImage="false"><wsad:Name>lTP</wsad:Name><wsad:OrigName>l-TP</wsad:OrigName><wsad:Type>4</wsad:Type><wsad:Mode>1</wsad:Mode></wsad:Parameter><wsad:Parameter allowUnknown="true" ordinal="5" writeXmlBeforeImage="false"><wsad:Name>lCheque</wsad:Name><wsad:OrigName>l-Cheque</wsad:OrigName><wsad:Type>1</wsad:Type><wsad:Mode>1</wsad:Mode></wsad:Parameter><wsad:Parameter allowUnknown="true" ordinal="6" writeXmlBeforeImage="false"><wsad:Name>lMonto</wsad:Name><wsad:OrigName>l-Monto</wsad:OrigName><wsad:Type>5</wsad:Type><wsad:Mode>1</wsad:Mode></wsad:Parameter><wsad:Parameter allowUnknown="true" ordinal="7" writeXmlBeforeImage="false"><wsad:Name>opcJson</wsad:Name><wsad:OrigName>opcJson</wsad:OrigName><wsad:Type>39</wsad:Type><wsad:Mode>2</wsad:Mode></wsad:Parameter></wsad:MethodDetail></wsad:InternalProc></wsad:ProcDetail></wsad:Operation>  </pidl:binding>
+</pidl:description>
