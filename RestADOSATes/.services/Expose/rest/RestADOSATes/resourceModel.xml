@@ -300,4 +300,26 @@
       <prgs:param name="IdFactura" type="QUERY"/>
     </prgs:operation>
   </prgs:resource>
+  <prgs:resource consumes="application/json" name="_MovCajaTP" path="/MovCajaTP" produces="application/json">
+    <prgs:operation consumes="application/json" idls="RestADOSATes/.services/AppServer/movcajatp.pidl::com.progress.openedge.pdt.bpmbindings" name="movcajatp..GetMovCajaTP" produces="application/json" verb="GET">
+      <prgs:param name="Sucursal" type="QUERY"/>
+      <prgs:param name="Caja" type="QUERY"/>
+      <prgs:param name="Fecha" type="QUERY"/>
+      <prgs:param name="TipoPago" type="QUERY"/>
+      <prgs:param name="NumCheque" type="QUERY"/>
+      <prgs:param name="Monto" type="QUERY"/>
+    </prgs:operation>
+  </prgs:resource>
+  <prgs:resource consumes="application/json" name="_CompPago" path="/CompPago" produces="application/json">
+    <prgs:operation consumes="application/json" idls="RestADOSATes/.services/AppServer/complepago.pidl::com.progress.openedge.pdt.bpmbindings" name="complepago..GetComplePago" produces="application/json" verb="GET">
+      <prgs:param name="Acuse" type="QUERY"/>
+      <prgs:param name="IdUser" type="QUERY"/>
+    </prgs:operation>
+    <prgs:operation consumes="application/json" idls="RestADOSATes/.services/AppServer/complepago.pidl::com.progress.openedge.pdt.bpmbindings" name="complepago..PostPagoAcuse" produces="application/json" verb="POST">
+      <prgs:param name="Acuse" type="QUERY"/>
+      <prgs:param name="FormaPago" type="QUERY"/>
+      <prgs:param name="FechaPago" type="QUERY"/>
+      <prgs:param name="IdUser" type="QUERY"/>
+    </prgs:operation>
+  </prgs:resource>
 </prgs:model>
