@@ -155,6 +155,12 @@ PROCEDURE GetDashBoard:
           l-fecoper = TODAY - 62
           l-cliente = 1*/ .
 
+    /* Limpiar tablas temporales antes de cargar datos */
+    EMPTY TEMP-TABLE wIva.
+    EMPTY TEMP-TABLE ttfact.
+    EMPTY TEMP-TABLE wMov.
+    EMPTY TEMP-TABLE tttotal.
+    
     IF l-cliente = 4 THEN 
     DO:
         FOR EACH Caja WHERE Caja.Id-Depto = "506" NO-LOCK:
@@ -207,7 +213,7 @@ PROCEDURE GetDashBoard:
     /* Busqueda de Remisiones NORMALES */
     FOR EACH MovCaja WHERE MovCaja.FecDep    <= l-fecoper  AND
         MovCaja.Fecoper    = l-fecoper  AND
-      /*  MovCaja.Canc       =  FALSE     AND */
+        /*  MovCaja.Canc       =  FALSE     AND */
         MovCaja.TipoVenta  = (IF l-tipo = 'Ticket' THEN 1 ELSE 2 ) AND
         (IF l-cliente < 3 THEN 
         (NOT CAN-DO(l-ListSuc,STRING(MovCaja.Id-Caja)))
@@ -697,16 +703,20 @@ PROCEDURE GetDashBoard:
     END.
 
     ASSIGN 
-        l-tot = l-subtotal + l-ivaa
+        l-tot      = l-subtotal + l-ivaa
         l-response = 200.
     
-    CREATE  tttotal.
-    ASSIGN 
-        tttotal.id     = "T"
-        tttotal.Subtot = l-subtotal
-        tttotal.Iva    = l-ivaa
-        tttotal.Tot    = l-tot
-        tttotal.Don    = l-redo.  
+    /* Solo crear la fila si l-subtotal tiene valor */
+    IF l-subtotal <> 0 THEN 
+    DO:
+        CREATE tttotal.
+        ASSIGN 
+            tttotal.id     = "T"
+            tttotal.Subtot = l-subtotal
+            tttotal.Iva    = l-ivaa
+            tttotal.Tot    = l-tot
+            tttotal.Don    = l-redo.
+    END. 
 
     /*
         l-subtotal LABEL 'Subtot'

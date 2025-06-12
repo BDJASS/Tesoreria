@@ -143,6 +143,7 @@
   <prgs:resource consumes="application/json" name="_RepRelacionCheque" path="/RepRelacionCheque" produces="application/json">
     <prgs:operation consumes="application/json" idls="RestADOSATes/.services/AppServer/teserp017.pidl::com.progress.openedge.pdt.bpmbindings" name="teserp017..GetRepRelacionCheque" produces="application/json" verb="GET">
       <prgs:param name="FechaInicio" type="QUERY"/>
+      <prgs:param name="Relacion" type="QUERY"/>
     </prgs:operation>
   </prgs:resource>
   <prgs:resource consumes="application/json" name="_TesDashboard2" path="/TesDashboard2" produces="application/json">
@@ -320,6 +321,12 @@
       <prgs:param name="FormaPago" type="QUERY"/>
       <prgs:param name="FechaPago" type="QUERY"/>
       <prgs:param name="IdUser" type="QUERY"/>
+    </prgs:operation>
+  </prgs:resource>
+  <prgs:resource consumes="application/json" name="_RepDiarioDepLinea" path="/RepDiarioDepLinea" produces="application/json">
+    <prgs:operation consumes="application/json" idls="RestADOSATes/.services/AppServer/teserp022.pidl::com.progress.openedge.pdt.bpmbindings" name="teserp022..GetRepDiarioDepLinea" produces="application/json" verb="GET">
+      <prgs:param name="FecIni" type="QUERY"/>
+      <prgs:param name="FecFin" type="QUERY"/>
     </prgs:operation>
   </prgs:resource>
 </prgs:model>
