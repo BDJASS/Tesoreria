@@ -190,18 +190,18 @@ IF AVAILABLE sysgeneral THEN g-iva = SysGeneral.Porc-Iva.
 ASSIGN l-descuento = 0.
 
 IF l-tipo <> 'ticket' THEN DO:
-   FOR EACH wMov WHERE wMov.manual AND wMov.selec :
-       ASSIGN l-descuento = l-descuento + wMov.ImpNCred.
+   FOR EACH wMov WHERE wMov.manual = TRUE AND wMov.selec = TRUE:
+    ASSIGN l-descuento = l-descuento + wMov.ImpNCred.
    END.
    ASSIGN l-subtotal = l-subtotal + l-descuento.
-END.
+END.               
+
 
 /* sacar totales */
 
 FOR EACH wMov WHERE wMov.selec :
    ASSIGN l-subtotal = l-subtotal + wMov.ImpVentas
-          l-ivaa     = l-ivaa     + wMov.iva
-          .
+          l-ivaa     = l-ivaa     + wMov.iva .
 END.
 
 IF l-subtotal  = 0 THEN DO:
@@ -209,7 +209,7 @@ IF l-subtotal  = 0 THEN DO:
    Respuesta = "No se permite facturar con valor de cero."
    IdError = TRUE.
     RETURN.
-END.  
+END.       
 
    
    
@@ -635,6 +635,7 @@ IF l-factura <> '' THEN DO:
        // RUN vtac0300.p (INPUT l-factura, INPUT l-factura, INPUT 6). // Imprime Factura de Credito
 END.
 IF l-factura <> '' THEN DO:
+    RELEASE Factura.
     ASSIGN
     Respuesta = "Se genero el folio " + l-factura 
             IdError   = FALSE.   
