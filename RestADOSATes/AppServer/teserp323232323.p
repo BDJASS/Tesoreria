@@ -28,6 +28,7 @@ DEFINE VAR      l-descr     AS CHARACTER FORMAT 'X(10)'.
 DEFINE VAR      l-opcion    AS CHAR      EXTENT 3 INITIAL ['TICKET','REMISION','ELECTRONICA'] FORMAT 'X(11)'.
 DEFINE VAR      l-subtotal  AS DECIMAL   DECIMALS 2 FORMAT 'Z,ZZZ,ZZ9.99-'.
 DEFINE VAR      l-ivaa      AS DECIMAL   DECIMALS 2 FORMAT 'Z,ZZZ,ZZ9.99-'.
+DEFINE VAR      l-impNC     AS DECIMAL   DECIMALS 2 FORMAT 'Z,ZZZ,ZZ9.99-'.
 DEFINE VAR      l-tot       AS DECIMAL   DECIMALS 2 FORMAT 'Z,ZZZ,ZZ9.99-'.
 DEFINE VAR      l-redo      AS DECIMAL   DECIMALS 2 FORMAT 'Z,ZZZ,ZZ9.99-'.
 DEFINE VAR      l-archredo  AS CHAR.
@@ -201,7 +202,8 @@ END.
 
 FOR EACH wMov WHERE wMov.selec :
    ASSIGN l-subtotal = l-subtotal + wMov.ImpVentas
-          l-ivaa     = l-ivaa     + wMov.iva .
+          l-ivaa     = l-ivaa     + wMov.iva 
+          l-impNC    = l-impNC   + wMov.ImpNCred.
 END.
 
 IF l-subtotal  = 0 THEN DO:
@@ -265,10 +267,10 @@ DO TRANSACTION ON ERROR UNDO Proceso, LEAVE Proceso:
           Factura.TipoPrecio  = "M"
           Factura.id-Entrega  = 4
           Factura.Id-Cond     = 0
-          Factura.subtotal    = l-subtotal
+          Factura.subtotal    = l-subtotal - l-impNC
           Factura.Descuento   = l-descuento
           Factura.IVA         = l-ivaa
-          Factura.Tot         = l-subtotal - l-descuento + l-ivaa.
+          Factura.Tot         = l-subtotal - l-descuento - l-impNC + l-ivaa.
 
    ASSIGN l-vendedor  = ''
           l-iniciales = ''
