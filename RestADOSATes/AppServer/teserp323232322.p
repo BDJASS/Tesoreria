@@ -45,7 +45,7 @@ DEF    VAR      l-ListSuc   AS CHAR      NO-UNDO.
 DEF    VAR      l-Part1     AS DECIMAL   NO-UNDO.
 DEF    VAR      l-Part0     AS DECIMAL   NO-UNDO.
    
-DEFINE VARIABLE l-Monto     LIKE DepBanco.Importe NO-UNDO INITIAL 0.  // RNPC - 2019-12-27
+
 
 
 DEFINE VAR      l-teclas    AS CHAR      FORMAT "x(20)"
@@ -117,6 +117,7 @@ PROCEDURE GetDashBoard:
     DEFINE OUTPUT  PARAMETER l-response AS INT.
     DEFINE OUTPUT PARAMETER Respuesta  AS CHAR. 
     DEFINE OUTPUT PARAMETER IdError    AS LOGICAL.
+    DEFINE OUTPUT PARAMETER l-Monto LIKE DepBanco.Importe NO-UNDO INITIAL 0.  // RNPC - 2019-12-27
     DEFINE OUTPUT PARAMETER DATASET FOR dsFactura.
     
     IF l-tipo = ? THEN l-tipo = "".

@@ -46,7 +46,6 @@ DEF    VAR      l-ListSuc   AS CHAR      NO-UNDO.
 DEF    VAR      l-Part1     AS DECIMAL   NO-UNDO.
 DEF    VAR      l-Part0     AS DECIMAL   NO-UNDO.
    
-DEFINE VARIABLE l-Monto     LIKE DepBanco.Importe NO-UNDO INITIAL 0.  // RNPC - 2019-12-27
 
 
 DEFINE VAR      l-teclas    AS CHAR      FORMAT "x(20)"
@@ -135,6 +134,7 @@ PROCEDURE PostFactura:
     DEFINE INPUT  PARAMETER l-cliente   AS INT.
     DEFINE INPUT  PARAMETER l-fecoper AS DATE.
     DEFINE INPUT  PARAMETER pIdUser    AS CHAR.
+    DEFINE INPUT  PARAMETER l-Monto  LIKE DepBanco.Importe.  // RNPC - 2019-12-27 
     DEFINE OUTPUT PARAMETER Respuesta  AS CHAR.     
     DEFINE OUTPUT PARAMETER IdError    AS LOGICAL.
 
@@ -272,7 +272,7 @@ DO TRANSACTION ON ERROR UNDO Proceso, LEAVE Proceso:
           Factura.IVA         = l-ivaa
           Factura.Tot         = l-subtotal - l-descuento - l-impNC + l-ivaa.
 
-   ASSIGN l-vendedor  = ''
+   ASSIGN l-vendedor  = '' 
           l-iniciales = ''
           l-ubic      = ''.
 
@@ -621,7 +621,7 @@ RELEASE EstCte.
 STATUS DEFAULT "".
 IF l-factura <> '' THEN DO:
     // RNPC - 2019-12-30 - Crea Acuse
-    IF l-Monto > 0 THEN RUN p-creaAcuseCtdo(INPUT pIdUser).
+    IF l-Monto > 0 THEN RUN p-creaAcuseCtdo(INPUT pIdUser,INPUT l-fecoper,INPUT l-Monto).
     
    MESSAGE 'Se genero el folio ' + l-factura +
            '. Presione cualquier tecla para continuar...'.
@@ -660,6 +660,7 @@ END PROCEDURE.
 PROCEDURE p-creaAcuseCtdo:
     DEFINE INPUT  PARAMETER pUsuario    AS CHAR.
     DEFINE INPUT  PARAMETER pFecha      AS DATE.
+    DEFINE INPUT  PARAMETER pMonto      AS DECIMAL.
     DEF VAR l-cob       AS INTEGER                  NO-UNDO.
     DEF VAR meses       AS CHARACTER EXTENT 12 NO-UNDO INITIAL 
     ["ENE","FEB","MAR","ABR","MAY","JUN","JUL","AGO","SEP","OCT","NOV","DIC"].
@@ -734,7 +735,7 @@ PROCEDURE p-creaAcuseCtdo:
                 DocAcuse.FecDoc     = Factura.FecReg WHEN AVAILABLE Factura  
                 DocAcuse.Id-MC      = 1
                 DocAcuse.Sec        = 1
-                DocAcuse.ImpPago    = l-Monto
+                DocAcuse.ImpPago    = pMonto
                 DocAcuse.Id-Moneda  = 1
                 DocAcuse.TipoCambio = 1.
         
@@ -744,8 +745,8 @@ PROCEDURE p-creaAcuseCtdo:
             PagoAcuse.Id-Acuse    = Acuse.Id-Acuse
             PagoAcuse.Sec         = 1 
             PagoAcuse.Id-Tp       = 57  // DEP LOCAL 
-            PagoAcuse.ImpRecibido = l-Monto
-            PagoAcuse.Importe     = l-Monto
+            PagoAcuse.ImpRecibido = pMonto
+            PagoAcuse.Importe     = pMonto
             PagoAcuse.Id-Banco    = 25  
             PagoAcuse.CPFormaPago = '01'       // "01=Efectivo,02=Cheque,03=Transferencia"
             PagoAcuse.Id-Moneda   = 1

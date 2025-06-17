@@ -20,7 +20,7 @@ BLOCK-LEVEL ON ERROR UNDO, THROW. /* Manejo de errores global */
 
 
 DEF TEMP-TABLE ttRepRelaCheque NO-UNDO
-    FIELD NoCheque LIKE Saldo.Cargo
+    FIELD NoCheque AS INT
     FIELD Fecha    LIKE Saldo.FecReg
     FIELD Banco    LIKE Saldo.Dias
     FIELD NomBanco AS CHAR
@@ -62,24 +62,24 @@ PROCEDURE GetRepRelacionCheque:
     /* Limpiar tabla temporal */
     EMPTY TEMP-TABLE ttRepRelaCheque.
     
+    IF ipRelacion <> "" AND LENGTH(ipRelacion) < 7 THEN
+        ipRelacion = FILL("0", 7 - LENGTH(ipRelacion)) + ipRelacion.
+        
     IF ipRelacion <> "" THEN 
     DO:
         FOR EACH Saldo NO-LOCK
             WHERE Saldo.Tty = ipRelacion
             AND Saldo.Doc = lcTipoCheque:
         
-            IF Saldo.FecReg = dFechaIni THEN 
-            DO:
                 FIND FIRST Banco WHERE Banco.Id-Banco = Saldo.Dias NO-LOCK NO-ERROR.
                 CREATE ttRepRelaCheque.
                 ASSIGN
                     ttRepRelaCheque.Fecha    = Saldo.FecReg
                     ttRepRelaCheque.Banco    = Saldo.Dias
-                    ttRepRelaCheque.NoCheque = Saldo.Cargo
+                    ttRepRelaCheque.NoCheque = INTEGER(Saldo.Cargo)
                     ttRepRelaCheque.Importe  = Saldo.Saldo
                     ttRepRelaCheque.Relacion = Saldo.Tty
                     ttRepRelaCheque.NomBanco = IF AVAILABLE Banco THEN Banco.Nombre ELSE "".
-            END.
         END.
     END.
     ELSE 
@@ -94,7 +94,7 @@ PROCEDURE GetRepRelacionCheque:
             ASSIGN
                 ttRepRelaCheque.Fecha    = Saldo.FecReg
                 ttRepRelaCheque.Banco    = Saldo.Dias
-                ttRepRelaCheque.NoCheque = Saldo.Cargo
+                ttRepRelaCheque.NoCheque = INTEGER(Saldo.Cargo)
                 ttRepRelaCheque.Importe  = Saldo.Saldo
                 ttRepRelaCheque.Relacion = Saldo.Tty
                 ttRepRelaCheque.NomBanco = IF AVAILABLE Banco THEN Banco.Nombre ELSE "".

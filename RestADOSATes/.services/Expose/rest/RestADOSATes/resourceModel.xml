@@ -48,16 +48,17 @@
     </prgs:operation>
   </prgs:resource>
   <prgs:resource consumes="application/json" name="_FacturasGlobales" path="/FacturasGlobales" produces="application/json">
+    <prgs:operation consumes="application/json" idls="RestADOSATes/.services/AppServer/teserp323232322.pidl::com.progress.openedge.pdt.bpmbindings" name="teserp323232322..GetDashBoard" produces="application/json" verb="GET">
+      <prgs:param name="Fecha" type="QUERY"/>
+      <prgs:param name="Tipo" type="QUERY"/>
+      <prgs:param name="Cliente" type="QUERY"/>
+    </prgs:operation>
     <prgs:operation consumes="application/json" idls="RestADOSATes/.services/AppServer/teserp323232323.pidl::com.progress.openedge.pdt.bpmbindings" name="teserp323232323..PostFactura" produces="application/json" verb="POST">
       <prgs:param name="Tipo" type="QUERY"/>
       <prgs:param name="Cliente" type="QUERY"/>
       <prgs:param name="Fecha" type="QUERY"/>
       <prgs:param name="Usuario" type="QUERY"/>
-    </prgs:operation>
-    <prgs:operation consumes="application/json" idls="RestADOSATes/.services/AppServer/teserp323232322.pidl::com.progress.openedge.pdt.bpmbindings" name="teserp323232322..GetDashBoard" produces="application/json" verb="GET">
-      <prgs:param name="Fecha" type="QUERY"/>
-      <prgs:param name="Tipo" type="QUERY"/>
-      <prgs:param name="Cliente" type="QUERY"/>
+      <prgs:param name="Monto" type="QUERY"/>
     </prgs:operation>
   </prgs:resource>
   <prgs:resource consumes="application/json" name="_FichaDeposito" path="/FichaDeposito" produces="application/json">

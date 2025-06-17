@@ -185,7 +185,7 @@ PROCEDURE GetMovCajaTP:
         ELSE DetMovc.Id-TP = l-TP)) NO-LOCK,
         FIRST Remision WHERE Remision.Id-Remision = MovCaja.Referencia NO-LOCK:
 
-        IF l-suc = 'M' AND NOT CAN-DO("1,2,3,4,5,6,7,8,16,17,18,22,33",STRING(DeTMovC.Id-Caja)) THEN NEXT.
+        IF l-suc = 'M' AND NOT CAN-DO("1,2,3,4,5,6,7,8,16,17,18,22,31,32,33",STRING(DeTMovC.Id-Caja)) THEN NEXT.
         IF l-suc = 'S' AND NOT CAN-DO("9,12,13,14,19,20,21,23,44,77",STRING(DeTMovC.Id-Caja)) THEN NEXT.
         IF l-suc = 'A' AND NOT CAN-DO("10,11,15,55,66,88",STRING(DeTMovC.Id-Caja)) THEN NEXT.
         IF l-suc = 'P' AND NOT CAN-DO("60,61,62,63,64,65,67,68,69",STRING(DeTMovC.Id-Caja)) THEN NEXT.
@@ -222,7 +222,7 @@ PROCEDURE GetMovCajaTP:
             t-Rep.TrackII     = IF DetMovC.ArqC <> "" OR DetMovC.NOperacion <> "" /*AND DetMovC.MsgCode <> ""*/ THEN "PINPAD" ELSE ""
             t-Rep.Plazo       = DetMovC.Plazo.
         
-        IF CAN-DO("1,2,3,4,5,6,7,8,16,17,18,22,33",STRING(DeTMovC.Id-Caja))  THEN
+        IF CAN-DO("1,2,3,4,5,6,7,8,16,17,18,22,31,32,33",STRING(DeTMovC.Id-Caja))  THEN
             ASSIGN t-Rep.Secuencia  = 1
                 t-rep.IdSucursal = "M".
         ELSE IF CAN-DO("10,11,15,55,66,88",STRING(DeTMovC.Id-Caja))  THEN
@@ -368,7 +368,7 @@ PROCEDURE GetMovCajaTP:
             ASSIGN 
                 l-TotDevTC = 0.
             FOR EACH MovCaja WHERE (IF t-Rep.Secuencia = 1
-                THEN CAN-DO ("1,2,3,4,5,6,7,8,16,17,18,22,33",STRING(MovCaja.Id-Caja))
+                THEN CAN-DO ("1,2,3,4,5,6,7,8,16,17,18,22,31,32,33",STRING(MovCaja.Id-Caja))
                 ELSE IF t-Rep.Secuencia = 2
                 THEN CAN-DO ("10,11,15,55,66,88",STRING(MovCaja.Id-Caja))
                 ELSE IF t-Rep.Secuencia = 3
@@ -431,7 +431,7 @@ PROCEDURE GetMovCajaTP:
             ttTotales.TCre  = l-Tcredito
             ttTotales.TAmi  = l-Tamiga
             ttTotales.TCma  = l-Tmatic
-            ttTotales.TAme  = l-Tamerica
+            ttTotales.TAme  = l-Tamerica   
             ttTotales.DevTC = l-TTotDevTC.
       
     END.

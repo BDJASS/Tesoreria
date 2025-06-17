@@ -762,8 +762,8 @@
   &lt;mapping:mapFault name=&quot;default_fault&quot;/>&#xD;
 &lt;/mapping:messageMapping></lm:properties>
             <lm:properties name="_FacturasGlobales::teserp323232322..GetDashBoard::GET">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?>&#xD;
-&lt;mapping:messageMapping xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xmlns:mapping=&quot;http://www.progress.com/caf/mapping1.0&quot; xmlns:metadata=&quot;http://www.progress.com/caf/mapping1.0/toolingMetadata&quot;>&#xD;
-  &lt;metadata:toolingMetadata xsi:type=&quot;metadata:toolingMetadata&quot;>&#xD;
+&lt;mapping:messageMapping xmlns:mapping=&quot;http://www.progress.com/caf/mapping1.0&quot; xmlns:metadata=&quot;http://www.progress.com/caf/mapping1.0/toolingMetadata&quot; xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;>&#xD;
+  &lt;metadata:toolingMetadata>&#xD;
     &lt;metadata:mapInput>&#xD;
       &lt;metadata:source>&#xD;
         &lt;metadata:mappablesData displayName=&quot;Fecha&quot; expressionName=&quot;${rest.queryparam['Fecha']}&quot; mappableType=&quot;MANUAL&quot;/>&#xD;
@@ -777,6 +777,7 @@
       &lt;metadata:target>&#xD;
         &lt;metadata:mappablesData displayName=&quot;Respuesta&quot; expressionName=&quot;${json.object['response'].string['Respuesta']}&quot; mappableType=&quot;MANUAL&quot;/>&#xD;
         &lt;metadata:mappablesData displayName=&quot;IdError&quot; expressionName=&quot;${json.object['response'].boolean['IdError']}&quot; mappableType=&quot;MANUAL&quot;/>&#xD;
+        &lt;metadata:mappablesData displayName=&quot;Monto&quot; expressionName=&quot;${json.object['response'].decimalvalue['Monto']}&quot; mappableType=&quot;MANUAL&quot;/>&#xD;
         &lt;metadata:mappablesData displayName=&quot;dsFactura&quot; expressionName=&quot;${json.object['response'].object['dsFactura']}&quot; mappableType=&quot;MANUAL&quot;/>&#xD;
       &lt;/metadata:target>&#xD;
     &lt;/metadata:mapOutput>&#xD;
@@ -790,6 +791,7 @@
     &lt;mapping:rule action=&quot;None&quot; resource=&quot;&quot; source=&quot;${idl.param['lResponse']}&quot; target=&quot;${http.statuscode}&quot; type=&quot;INTERFACE_PARAM&quot;/>&#xD;
     &lt;mapping:rule action=&quot;None&quot; resource=&quot;&quot; source=&quot;${idl.param['Respuesta']}&quot; target=&quot;${json.object['response'].string['Respuesta']}&quot; type=&quot;INTERFACE_PARAM&quot;/>&#xD;
     &lt;mapping:rule action=&quot;None&quot; resource=&quot;&quot; source=&quot;${idl.param['IdError']}&quot; target=&quot;${json.object['response'].boolean['IdError']}&quot; type=&quot;INTERFACE_PARAM&quot;/>&#xD;
+    &lt;mapping:rule action=&quot;None&quot; resource=&quot;&quot; source=&quot;${idl.param['lMonto']}&quot; target=&quot;${json.object['response'].decimalvalue['Monto']}&quot; type=&quot;INTERFACE_PARAM&quot;/>&#xD;
     &lt;mapping:rule action=&quot;None&quot; resource=&quot;&quot; source=&quot;${idl.param['dsFactura']}&quot; target=&quot;${json.object['response'].object['dsFactura']}&quot; type=&quot;INTERFACE_PARAM&quot;/>&#xD;
   &lt;/mapping:mapOutput>&#xD;
   &lt;mapping:mapFault name=&quot;default_fault&quot;/>&#xD;
@@ -803,6 +805,7 @@
         &lt;metadata:mappablesData displayName=&quot;Cliente&quot; expressionName=&quot;${rest.queryparam['Cliente']}&quot; mappableType=&quot;MANUAL&quot;/>&#xD;
         &lt;metadata:mappablesData displayName=&quot;Fecha&quot; expressionName=&quot;${rest.queryparam['Fecha']}&quot; mappableType=&quot;MANUAL&quot;/>&#xD;
         &lt;metadata:mappablesData displayName=&quot;Usuario&quot; expressionName=&quot;${rest.queryparam['Usuario']}&quot; mappableType=&quot;MANUAL&quot;/>&#xD;
+        &lt;metadata:mappablesData displayName=&quot;Monto&quot; expressionName=&quot;${rest.queryparam['Monto']}&quot; mappableType=&quot;MANUAL&quot;/>&#xD;
       &lt;/metadata:source>&#xD;
       &lt;metadata:target/>&#xD;
     &lt;/metadata:mapInput>&#xD;
@@ -815,11 +818,12 @@
     &lt;/metadata:mapOutput>&#xD;
   &lt;/metadata:toolingMetadata>&#xD;
   &lt;mapping:mapInput>&#xD;
-    &lt;mapping:rule action=&quot;None&quot; resource=&quot;&quot; source=&quot;${http.body}&quot; target=&quot;${idl.param['dsFactura']}&quot; type=&quot;INTERFACE_PARAM&quot;/>&#xD;
     &lt;mapping:rule action=&quot;None&quot; resource=&quot;&quot; source=&quot;${rest.queryparam['Tipo']}&quot; target=&quot;${idl.param['lTipo']}&quot; type=&quot;INTERFACE_PARAM&quot;/>&#xD;
     &lt;mapping:rule action=&quot;None&quot; resource=&quot;&quot; source=&quot;${rest.queryparam['Cliente']}&quot; target=&quot;${idl.param['lCliente']}&quot; type=&quot;INTERFACE_PARAM&quot;/>&#xD;
     &lt;mapping:rule action=&quot;None&quot; resource=&quot;&quot; source=&quot;${rest.queryparam['Fecha']}&quot; target=&quot;${idl.param['lFecoper']}&quot; type=&quot;INTERFACE_PARAM&quot;/>&#xD;
     &lt;mapping:rule action=&quot;None&quot; resource=&quot;&quot; source=&quot;${rest.queryparam['Usuario']}&quot; target=&quot;${idl.param['pIdUser']}&quot; type=&quot;INTERFACE_PARAM&quot;/>&#xD;
+    &lt;mapping:rule action=&quot;None&quot; resource=&quot;&quot; source=&quot;${rest.queryparam['Monto']}&quot; target=&quot;${idl.param['lMonto']}&quot; type=&quot;INTERFACE_PARAM&quot;/>&#xD;
+    &lt;mapping:rule action=&quot;None&quot; resource=&quot;&quot; source=&quot;${http.body}&quot; target=&quot;${idl.param['dsFactura']}&quot; type=&quot;INTERFACE_PARAM&quot;/>&#xD;
   &lt;/mapping:mapInput>&#xD;
   &lt;mapping:mapOutput>&#xD;
     &lt;mapping:rule action=&quot;None&quot; resource=&quot;&quot; source=&quot;${idl.param['Respuesta']}&quot; target=&quot;${json.object['response'].string['Respuesta']}&quot; type=&quot;INTERFACE_PARAM&quot;/>&#xD;
