@@ -11,8 +11,7 @@ DEFINE TEMP-TABLE ttRelFacEnv NO-UNDO
     FIELD Destinatario AS CHARACTER
     FIELD IdCliente    AS INTEGER
     FIELD RazonSocial  AS CHARACTER
-    FIELD Tipo         AS CHARACTER
-    INDEX idx IS PRIMARY UNIQUE IdRelFac.
+    FIELD Tipo         AS CHARACTER.
 
 DEFINE TEMP-TABLE ttRelFacDoc NO-UNDO
     FIELD IdRelFac     AS CHARACTER
@@ -25,7 +24,7 @@ DEFINE TEMP-TABLE ttRelFacDoc NO-UNDO
     FIELD Importe       AS DECIMAL
     FIELD TP            AS INT
     FIELD Entregado     AS LOGICAL 
-    INDEX idx IS PRIMARY UNIQUE IdFactura.   
+    .   
 
 DEFINE DATASET dsRelFacEnv FOR ttRelFacEnv.
 DEFINE DATASET dsRelFacDoc FOR ttRelFacDoc.
@@ -97,7 +96,7 @@ PROCEDURE GetRelFacEnvByFactura:
             ttRelFacEnv.Destinatario = vDestinatario
             ttRelFacEnv.IdCliente    = vCliente
             ttRelFacEnv.RazonSocial  = vRazonSocial.
-        ttRelFacEnv.Tipo         = vTipo.
+            ttRelFacEnv.Tipo         = vTipo.
         RELEASE ttRelFacEnv.
     END.
 

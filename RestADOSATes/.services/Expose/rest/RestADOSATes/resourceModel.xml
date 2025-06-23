@@ -330,4 +330,9 @@
       <prgs:param name="FecFin" type="QUERY"/>
     </prgs:operation>
   </prgs:resource>
+  <prgs:resource consumes="application/json" name="_ConsultaSaldos" path="/ConsultaSaldos" produces="application/json">
+    <prgs:operation consumes="application/json" idls="RestADOSATes/.services/AppServer/teserp023.pidl::com.progress.openedge.pdt.bpmbindings" name="teserp023..GetConsultaSaldos" produces="application/json" verb="GET">
+      <prgs:param name="Documento" type="QUERY"/>
+    </prgs:operation>
+  </prgs:resource>
 </prgs:model>

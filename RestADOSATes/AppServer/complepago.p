@@ -164,35 +164,37 @@ PROCEDURE GetComplePago:
     DEFINE INPUT PARAMETER Acuse AS CHARACTER NO-UNDO. 
     DEFINE INPUT PARAMETER IdUser AS CHARACTER NO-UNDO.
     DEFINE OUTPUT PARAMETER opcJson AS LONGCHAR NO-UNDO.
-
+ 
     FIND adosa.URL WHERE adosa.URL.Parametro = "CompPagoCyC" NO-LOCK NO-ERROR.
     IF AVAILABLE adosa.URL THEN ASSIGN l-SuperUser = adosa.URL.Valor.
-
+ 
     CREATE ttAcuse.
-
+ 
     IF LOOKUP(IdUser,l-SuperUser) = 0 THEN 
     DO:
         ASSIGN 
             ttAcuse.oError = "Usuario No Permitido".  
         RELEASE ttAcuse.  
+        DATASET dsAcuse:WRITE-JSON("LONGCHAR", opcJson, TRUE).
         RETURN.
     END.
-
+ 
     FIND Acuse WHERE Acuse.Id-Acuse = Acuse NO-LOCK NO-ERROR.
-
+ 
     IF NOT AVAILABLE Acuse THEN 
     DO:                  
         ASSIGN 
             ttAcuse.oError = "El Acuse no existe.".
         RELEASE ttAcuse.
+        DATASET dsAcuse:WRITE-JSON("LONGCHAR", opcJson, TRUE).
         RETURN.
     END.
     IF Acuse.Estatus <> 4 THEN 
     DO:
-                  
         ASSIGN 
             ttAcuse.oError = "El Acuse no esta depositado...".
         RELEASE ttAcuse.
+        DATASET dsAcuse:WRITE-JSON("LONGCHAR", opcJson, TRUE).
         RETURN.
     END.
     IF Acuse.Tipo <> "N" THEN 
@@ -200,6 +202,7 @@ PROCEDURE GetComplePago:
         ASSIGN 
             ttAcuse.oError = "Solo se pueden corregir acuses NORMALES, no ANTICIPOS...".
         RELEASE ttAcuse.
+        DATASET dsAcuse:WRITE-JSON("LONGCHAR", opcJson, TRUE).
         RETURN.
     END. 
     FIND FIRST CPago WHERE CPago.Id-Acuse = Acuse.Id-Acuse
@@ -207,34 +210,31 @@ PROCEDURE GetComplePago:
         NO-LOCK NO-ERROR.
     IF NOT AVAILABLE CPago THEN 
     DO:
-                  
         ASSIGN 
             ttAcuse.oError = "El Acuse no tiene complemento de pago ...".
         RELEASE ttAcuse.
+        DATASET dsAcuse:WRITE-JSON("LONGCHAR", opcJson, TRUE).
         RETURN.
     END. 
     IF CPago.FecReg < TODAY - 90 THEN 
     DO:
-                  
         ASSIGN 
             ttAcuse.oError = "El complemento de pago es muy antiguo ...".
         IF IdUser <> "NCR" AND IdUser <> "RGP" THEN 
         DO:
             RELEASE ttAcuse.
+            DATASET dsAcuse:WRITE-JSON("LONGCHAR", opcJson, TRUE).
             RETURN.
         END.
     END.
-               
-               
+
     FIND FIRST Acuse WHERE Acuse.Id-Acuse = Acuse NO-LOCK NO-ERROR.
-               
     IF AVAILABLE Acuse THEN 
     DO:
         ASSIGN 
             l-hora = (IF LENGTH(Acuse.Comen[3]) >= 40 THEN 
                           SUBSTRING(Acuse.Comen[3],42,50) 
                        ELSE "SIN IMPR").
-                       
         ASSIGN 
             ttAcuse.IdAcuse     = Acuse.Id-Acuse
             ttAcuse.IdCliente   = Acuse.Id-Cliente
@@ -245,12 +245,9 @@ PROCEDURE GetComplePago:
             ttAcuse.FecDep      = Acuse.FecDep
             ttAcuse.FecPago     = CPago.FecPag
             ttAcuse.FormaPago   = CPago.FormaDePago.
-        
         FOR EACH DocAcuse WHERE DocAcuse.Id-Acuse = Acuse.Id-Acuse NO-LOCK:
             FIND TabMC WHERE TabMC.Id-MC = DocAcuse.Id-MC NO-LOCK NO-ERROR.
-            
             CREATE ttDocAcuse.
-            
             ASSIGN 
                 ttDocAcuse.IdAcuse   = DocAcuse.Id-Acuse
                 ttDocAcuse.FecDoc    = DocAcuse.FecDoc
@@ -261,18 +258,13 @@ PROCEDURE GetComplePago:
                 ttDocAcuse.DescEsp   = DocAcuse.ImpDescEsp + DocAcuse.ImpDescAdc
                 ttDocAcuse.ImpDevol  = DocAcuse.ImpDevol
                 ttDocAcuse.Dias      = Acuse.FecDep - DocAcuse.FecDoc.
-            
             RELEASE ttDocAcuse.
-        
         END.  
-        
         ASSIGN 
             l-totrec = 0
             l-cambio = 0
             l-tc     = 0.
-        
         FOR EACH PagoAcuse WHERE PagoAcuse.Id-Acuse = Acuse.Id-Acuse NO-LOCK:
-            
             FIND TipoPago OF PagoAcuse NO-LOCK NO-ERROR.
             IF AVAILABLE TipoPago THEN 
             DO:
@@ -289,9 +281,7 @@ PROCEDURE GetComplePago:
             ELSE
                 ASSIGN l-totrec = l-totrec + PagoAcuse.ImpRecibido
                     l-cambio = l-cambio + PagoAcuse.ImpRecibido - PagoAcuse.Importe.
-            
             CREATE ttPagoAcuse.
-            
             ASSIGN 
                 ttPagoAcuse.IdAcuse     = PagoAcuse.Id-Acuse
                 ttPagoAcuse.IdTP        = PagoAcuse.Id-Tp
@@ -299,7 +289,6 @@ PROCEDURE GetComplePago:
                 ttPagoAcuse.FecCheque   = PagoAcuse.FecCheque
                 ttPagoAcuse.Cheque      = PagoAcuse.Cheque
                 ttPagoAcuse.IdBanco     = PagoAcuse.Id-Banco.
-            
             IF PagoAcuse.Id-dev > 0 THEN
                 ASSIGN ttPagoAcuse.Descr = 'DEV. ' + STRING(PagoAcuse.Id-dev).
             ELSE 
@@ -322,22 +311,16 @@ PROCEDURE GetComplePago:
                         ttPagoAcuse.NomBanco = IF AVAILABLE TarjetaC THEN TarjetaC.Nombre ELSE ''.
                 END.
             END.
-            
             RELEASE ttPagoAcuse.
-            
         END.   
-        
-        CREATE ttTotPagoAcuse.
-        
+        CREATE ttTotPagoAcuse.    
         ASSIGN 
             ttTotPagoAcuse.IdAcuse   = Acuse.Id-Acuse
             ttTotPagoAcuse.TotPago   = l-totrec
             ttTotPagoAcuse.TotCambio = l-cambio
             ttTotPagoAcuse.TotCred   = l-tc.
-               
         RELEASE ttTotPagoAcuse.
         RELEASE ttAcuse.
-    
     END.
     DATASET dsAcuse:WRITE-JSON("LONGCHAR", opcJson, TRUE).
 END PROCEDURE.

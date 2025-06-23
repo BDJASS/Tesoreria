@@ -414,6 +414,34 @@
   &lt;/mapping:mapOutput>&#xD;
   &lt;mapping:mapFault name=&quot;default_fault&quot;/>&#xD;
 &lt;/mapping:messageMapping></lm:properties>
+            <lm:properties name="_ConsultaSaldos::teserp023..GetConsultaSaldos::GET">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?>&#xD;
+&lt;mapping:messageMapping xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xmlns:mapping=&quot;http://www.progress.com/caf/mapping1.0&quot; xmlns:metadata=&quot;http://www.progress.com/caf/mapping1.0/toolingMetadata&quot;>&#xD;
+  &lt;metadata:toolingMetadata xsi:type=&quot;metadata:toolingMetadata&quot;>&#xD;
+    &lt;metadata:mapInput>&#xD;
+      &lt;metadata:source>&#xD;
+        &lt;metadata:mappablesData displayName=&quot;Documento&quot; expressionName=&quot;${rest.queryparam['Documento']}&quot; mappableType=&quot;MANUAL&quot;/>&#xD;
+      &lt;/metadata:source>&#xD;
+      &lt;metadata:target/>&#xD;
+    &lt;/metadata:mapInput>&#xD;
+    &lt;metadata:mapOutput>&#xD;
+      &lt;metadata:source/>&#xD;
+      &lt;metadata:target>&#xD;
+        &lt;metadata:mappablesData displayName=&quot;Respuesta&quot; expressionName=&quot;${json.object['response'].string['Respuesta']}&quot; mappableType=&quot;MANUAL&quot;/>&#xD;
+        &lt;metadata:mappablesData displayName=&quot;IdError&quot; expressionName=&quot;${json.object['response'].boolean['IdError']}&quot; mappableType=&quot;MANUAL&quot;/>&#xD;
+        &lt;metadata:mappablesData displayName=&quot;dsConsulta&quot; expressionName=&quot;${json.object['response'].object['dsConsulta']}&quot; mappableType=&quot;MANUAL&quot;/>&#xD;
+      &lt;/metadata:target>&#xD;
+    &lt;/metadata:mapOutput>&#xD;
+  &lt;/metadata:toolingMetadata>&#xD;
+  &lt;mapping:mapInput>&#xD;
+    &lt;mapping:rule action=&quot;None&quot; resource=&quot;&quot; source=&quot;${rest.queryparam['Documento']}&quot; target=&quot;${idl.param['pRefsaldo']}&quot; type=&quot;INTERFACE_PARAM&quot;/>&#xD;
+  &lt;/mapping:mapInput>&#xD;
+  &lt;mapping:mapOutput>&#xD;
+    &lt;mapping:rule action=&quot;None&quot; resource=&quot;&quot; source=&quot;${idl.param['Respuesta']}&quot; target=&quot;${json.object['response'].string['Respuesta']}&quot; type=&quot;INTERFACE_PARAM&quot;/>&#xD;
+    &lt;mapping:rule action=&quot;None&quot; resource=&quot;&quot; source=&quot;${idl.param['IdError']}&quot; target=&quot;${json.object['response'].boolean['IdError']}&quot; type=&quot;INTERFACE_PARAM&quot;/>&#xD;
+    &lt;mapping:rule action=&quot;None&quot; resource=&quot;&quot; source=&quot;${idl.param['dsConsulta']}&quot; target=&quot;${json.object['response'].object['dsConsulta']}&quot; type=&quot;INTERFACE_PARAM&quot;/>&#xD;
+  &lt;/mapping:mapOutput>&#xD;
+  &lt;mapping:mapFault name=&quot;default_fault&quot;/>&#xD;
+&lt;/mapping:messageMapping></lm:properties>
             <lm:properties name="_ControlCajas::ctlcajas..GetCtlCajas::GET">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?>&#xD;
 &lt;mapping:messageMapping xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xmlns:mapping=&quot;http://www.progress.com/caf/mapping1.0&quot; xmlns:metadata=&quot;http://www.progress.com/caf/mapping1.0/toolingMetadata&quot;>&#xD;
   &lt;metadata:toolingMetadata xsi:type=&quot;metadata:toolingMetadata&quot;>&#xD;
