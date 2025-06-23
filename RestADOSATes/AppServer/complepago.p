@@ -17,7 +17,7 @@
 
 BLOCK-LEVEL ON ERROR UNDO, THROW.
 
-DEFINE TEMP-TABLE ttAcuse
+DEFINE TEMP-TABLE ttAcuse 
     FIELD IdAcuse     AS CHARACTER
     FIELD FecReg      AS DATE
     FIELD FecDep      AS DATE
@@ -175,7 +175,7 @@ PROCEDURE GetComplePago:
         ASSIGN 
             ttAcuse.oError = "Usuario No Permitido".  
         RELEASE ttAcuse.  
-        DATASET dsAcuse:WRITE-JSON("LONGCHAR", opcJson, TRUE).
+        DATASET dsAcuse:WRITE-JSON("LONGCHAR", opcJson, TRUE).   
         RETURN.
     END.
  
