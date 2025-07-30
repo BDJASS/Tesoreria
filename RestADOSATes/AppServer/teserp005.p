@@ -82,8 +82,9 @@ DEFINE TEMP-TABLE ttCheque NO-UNDO
     FIELD Banco2      AS CHAR
     FIELD CtaCheqDE   LIKE CheDev.CtaCheqDE
     FIELD Comen1      LIKE CheDev.Comen
-    FIELD Comen2      LIKE CheDev.Comen
-    FIELD Comen3      LIKE CheDev.Comen.
+    FIELD Comen2      LIKE CheDev.Comen    
+    FIELD Comen3      LIKE CheDev.Comen
+    FIELD UsuarioCanc LIKE Chedev.UsuarioCanc.
 
 
 DEF TEMP-TABLE ttSaldo NO-UNDO
@@ -110,6 +111,10 @@ PROCEDURE GetChequeDevuelto:
 
     DEFINE INPUT PARAMETER l-Id-CheDev LIKE Chedev.Id-Chedev.
     DEFINE OUTPUT PARAMETER DATASET FOR dsCheque.
+    
+    IF LENGTH(TRIM(l-Id-CheDev)) <= 6 AND NOT l-Id-CheDev BEGINS "C" THEN DO:
+    l-Id-CheDev = "C" + FILL("0", 6 - LENGTH(TRIM(l-Id-CheDev))) + TRIM(l-Id-CheDev).
+     END.
 
     FIND CheDev WHERE CheDev.Id-CheDev = l-Id-CheDev
         NO-LOCK NO-ERROR.
@@ -177,7 +182,8 @@ PROCEDURE GetChequeDevuelto:
             ttCheque.CtaCheqDE   = CheDev.CtaCheqDE    
             ttCheque.Comen1      = CheDev.Comen[1]
             ttCheque.Comen2      = CheDev.Comen[2]
-            ttCheque.Comen2      = CheDev.Comen[3] .
+            ttCheque.Comen2      = CheDev.Comen[3]
+            ttCheque.UsuarioCanc = CheDev.UsuarioCanc .
 
         RELEASE Cliente.
     END.

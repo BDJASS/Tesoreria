@@ -198,8 +198,10 @@ PROCEDURE GetFichaDepositos:
             " no podra hacer modificaciones, verifique."
             IdError   = TRUE.
         RETURN.
-    END.  
+    END.    
     
+    
+    LOG-MANAGER:WRITE-MESSAGE(" /FichaDeposito >>> Ejecutando: GetFichaDepositos").     
  
     FOR EACH FichaDep WHERE FichaDep.FecReg = l-Fecha NO-LOCK
         USE-INDEX Idx-Fecha:
@@ -251,7 +253,7 @@ PROCEDURE GetTotalesFicha:
     ASSIGN
         l-Depositos    = 0
         l-total1       = 0
-        l-totME        = 0
+        l-totME        = 0  
         l-totMEMN      = 0
         l-totMEMNFac   = 0
         l-totMEMNPago  = 0
@@ -263,7 +265,9 @@ PROCEDURE GetTotalesFicha:
         l-SubTot       = 0
         l-Deudores     = 0
         l-SubTotME     = 0.
-
+    
+    LOG-MANAGER:WRITE-MESSAGE("/FichaDeposito >>> Ejecutando: GetTotalesFicha").   
+    
     FOR EACH Acuse 
         WHERE Acuse.FecDep = vFecha
         AND Acuse.Estatus = 4 NO-LOCK:
@@ -411,7 +415,7 @@ PROCEDURE PostFichaDep:
     END.
     
   
-    
+    LOG-MANAGER:WRITE-MESSAGE(" /FichaDeposito >>> Ejecutando: PostFichaDep"). 
 
             
     FOR EACH ttFichaDep  :        
@@ -473,7 +477,7 @@ PROCEDURE PostFichaDep:
         IF ttFichaDep.IdBanco = 1 THEN 
             ASSIGN l-TMax = 6.
         ELSE IF ttFichaDep.IdBanco = 25 THEN 
-                ASSIGN l-TMax = 3.
+                ASSIGN l-TMax = 3.      
             ELSE 
                 ASSIGN l-TMax = 2.
         /* Validación del tipo se mantiene igual */
@@ -484,7 +488,7 @@ PROCEDURE PostFichaDep:
                 Respuesta = "Tipo debe ser entre 1 y " + STRING(l-TMax).
             IdError = TRUE.
             RETURN.     
-        END.
+        END.       
     
         CREATE FichaDep.
         ASSIGN 

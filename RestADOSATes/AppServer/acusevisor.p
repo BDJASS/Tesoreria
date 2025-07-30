@@ -13,6 +13,20 @@
     Notes       :
   ----------------------------------------------------------------------*/
 
+/*
+   Ticket 1128 Revisar tema de Columnas vacias
+               Ajustar consulta x Acuse
+               JASS04072025
+*/
+
+/*
+   Ticket 1209 Visor de Acuses:  incluir en el visor de acuses, en la columna “descripción”, 
+               que cuando la columna esté vacía 
+              (es cuando NO son de Santander, o sea, cuando se capturan manuales), 
+      el visor ponga en esa columna el campo “Acuse.Comen[2]”.
+      JASS14072025
+*/
+
 /* ***************************  Definitions  ************************** */
 
 BLOCK-LEVEL ON ERROR UNDO, THROW.
@@ -64,21 +78,32 @@ PROCEDURE GetVisorAcuses:
 
     DEFINE BUFFER bf-acuse     FOR Acuse.
     DEFINE BUFFER bf-pagoacuse FOR PagoAcuse.
+    
+    /* Log inicial de parámetros */
+    LOG-MANAGER:WRITE-MESSAGE("/VisorAcuses - Ejecutando : " +
+        "fecIni=" + STRING(l-fecdepini) + ", " +
+        "fecFin=" + STRING(l-fecdepfin) + ", " +
+        "Estatus=" + STRING(Estatus)).     
+
 
     IF IdAcuse <> "" AND IdAcuse <> ? THEN 
     DO:
-        FOR EACH Acuse WHERE Acuse.FecOper  >= l-fecdepini 
+        IF LENGTH(IdAcuse) < 7 THEN
+            IdAcuse = FILL("0", 7 - LENGTH(IdAcuse)) + IdAcuse.
+        
+        FOR EACH Acuse WHERE /*Acuse.FecOper  >= l-fecdepini 
             AND Acuse.FecOper  <= l-fecdepfin
-            AND Acuse.Tipo     <> "C"
+            AND */ Acuse.Tipo     <> "C"   /* JASS04072025 */
             AND Acuse.Id-Acuse = IdAcuse
             AND (IF IdCliente <> 0 AND IdCliente <> ? THEN Acuse.Id-Cliente = IdCliente ELSE TRUE) NO-LOCK BY Acuse.FecOper BY Acuse.Id-Acuse:
                                                   
             FOR EACH PagoAcuse OF Acuse WHERE (IF IdTipoPago <> 0 AND IdTipoPago <> ? THEN PagoAcuse.Id-Tp = IdTipoPago ELSE TRUE) NO-LOCK:                         
 
-                CREATE ttAcuse.
+                
                 FIND TipoPago OF PagoAcuse NO-LOCK NO-ERROR.
                 IF AVAILABLE TipoPago AND PagoAcuse.Id-Tp <> 50 THEN 
                 DO:
+                    CREATE ttAcuse. /* JASS04072025 */
                     ASSIGN 
                         ttAcuse.Tot   = PagoAcuse.Importe * PagoAcuse.TC
                         ttAcuse.Descr = ''.
@@ -120,7 +145,21 @@ PROCEDURE GetVisorAcuses:
                             END.
                         END.
                     END.
-                
+                    /* JASS14072025 */ 
+                    IF NOT AVAILABLE DepBanco AND Acuse.Tipo = 'N' THEN 
+                    DO:
+                        FIND FIRST bf-acuse WHERE bf-acuse.id-cliente = Acuse.id-cliente
+                            AND bf-acuse.fecdep = Acuse.fecdep
+                            AND bf-acuse.tipo = 'N' NO-LOCK NO-ERROR.
+                        IF AVAILABLE bf-acuse THEN 
+                        DO:
+                            IF TRIM(Acuse.Comen[2]) = "" THEN
+                                ttAcuse.Descr = Acuse.Comen[1].
+                            ELSE
+                                ttAcuse.Descr = Acuse.Comen[2].  
+                        END.
+                    END.
+                        
                     ASSIGN 
                         ttAcuse.FecOper       = Acuse.FecOper
                         ttAcuse.IdAcuse       = Acuse.Id-Acuse
@@ -159,10 +198,11 @@ PROCEDURE GetVisorAcuses:
                                           
             FOR EACH PagoAcuse OF Acuse WHERE (IF IdTipoPago <> 0 AND IdTipoPago <> ? THEN PagoAcuse.Id-Tp = IdTipoPago ELSE TRUE) NO-LOCK:                         
 
-                CREATE ttAcuse.
+                
                 FIND TipoPago OF PagoAcuse NO-LOCK NO-ERROR.
                 IF AVAILABLE TipoPago AND PagoAcuse.Id-Tp <> 50 THEN 
                 DO:
+                    CREATE ttAcuse. /* JASS04072025 */
                     ASSIGN 
                         ttAcuse.Tot   = PagoAcuse.Importe * PagoAcuse.TC
                         ttAcuse.Descr = ''.
@@ -187,7 +227,7 @@ PROCEDURE GetVisorAcuses:
                             AND bf-acuse.tipo = 'N'
                             AND bf-acuse.fecdep = Acuse.fecdep
                             USE-INDEX idx-cliac NO-LOCK NO-ERROR.
-                        IF AVAILABLE bf-acuse THEN 
+                        IF AVAILABLE bf-acuse THEN   
                         DO:
                             FIND FIRST DepBanco WHERE DepBanco.Id-Acuse = bf-Acuse.Id-Acuse NO-LOCK NO-ERROR.
                             IF AVAILABLE DepBanco THEN 
@@ -203,6 +243,21 @@ PROCEDURE GetVisorAcuses:
                                     ttAcuse.Descr = 'ANT. ' + STRING(bf-Acuse.Id-Acuse).
                                 END.
                             END.
+                        END.
+                    END.
+                       
+                    /* JASS14072025 */ 
+                    IF NOT AVAILABLE DepBanco AND Acuse.Tipo = 'N' THEN 
+                    DO:
+                        FIND FIRST bf-acuse WHERE bf-acuse.id-cliente = Acuse.id-cliente
+                            AND bf-acuse.fecdep = Acuse.fecdep
+                            AND bf-acuse.tipo = 'N' NO-LOCK NO-ERROR.
+                        IF AVAILABLE bf-acuse THEN 
+                        DO:
+                            IF TRIM(Acuse.Comen[2]) = "" THEN
+                                ttAcuse.Descr = Acuse.Comen[1].
+                            ELSE
+                                ttAcuse.Descr = Acuse.Comen[2].  
                         END.
                     END.
                 
@@ -232,7 +287,7 @@ PROCEDURE GetVisorAcuses:
                 END.
             END.
         END.
-    END.
+    END.   
 
 END PROCEDURE.
 

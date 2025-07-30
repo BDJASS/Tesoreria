@@ -797,7 +797,7 @@ PROCEDURE GetRepFacNormal:
         DO:
             CREATE ttFacNormal.
             ASSIGN 
-                ttFacNormal.Tipo        = "FACS X CANCELAR EN EMBARQUE"
+                ttFacNormal.Tipo        = "FACTURAS POR CANCELAR EN EMBARQUE"
                 ttFacNormal.IdRemision  = w-CEmba.id-Remision
                 ttFacNormal.Pedido      = l-Pedidos
                 ttFacNormal.FecReg      = w-CEmba.FecReg     
@@ -850,7 +850,7 @@ PROCEDURE GetRepFacNormal:
         DO:
             CREATE ttFacNormal.
             ASSIGN 
-                ttFacNormal.Tipo        = "FACTS X CANC (PASA X MCIA)"
+                ttFacNormal.Tipo        = "FACTURAS POR CANCELAR (PASA POR MERCANCIA)"
                 ttFacNormal.IdRemision  = w-Datos.id-Remision
                 ttFacNormal.Pedido      = l-Pedidos
                 ttFacNormal.FecReg      = w-Datos.FecReg     

@@ -18,7 +18,7 @@
 BLOCK-LEVEL ON ERROR UNDO, THROW.
 
 DEFINE TEMP-TABLE ttFacturasInt
-    FIELD IdRemision   AS CHARACTER    
+    FIELD IdRemision   AS CHARACTER         
     FIELD IdPedido     AS CHARACTER
     FIELD IdReq        AS CHARACTER
     FIELD FecReg       AS DATE

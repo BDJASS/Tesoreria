@@ -121,6 +121,8 @@ PROCEDURE GetAcuse:
         RETURN.
     END.
     
+    /*  VALIDACION SOLO PARA EL POST YA QUE EL FRONT ENVIA FECHA TODAY Y AFECTA EN SABADOS 
+        AUNQUE EN LA CONSULTA LE PONGAN QUE ES DE OTRO DIA 
     FIND FolPolDep WHERE FolPolDep.FecReg = l-Fecha NO-LOCK NO-ERROR.
     IF NOT AVAILABLE FolPolDep THEN 
     DO:
@@ -130,15 +132,7 @@ PROCEDURE GetAcuse:
             IdError   = TRUE.
         RETURN.
     END.
-    FIND FIRST sysgeneral NO-LOCK NO-ERROR.
-    IF NOT AVAILABLE sysgeneral THEN 
-    DO:
-        ASSIGN
-            Respuesta = "No existe el registro en Sysgeneral." +
-            "Verifique con el depto de sistemas."
-            IdError   = TRUE.
-        RETURN.
-    END.
+    
 
     IF l-fecha <= sysgeneral.fecciedep THEN 
     DO:
@@ -147,6 +141,20 @@ PROCEDURE GetAcuse:
             IdError   = TRUE.
         RETURN.
     END. 
+    
+    
+    */ 
+    
+    FIND FIRST sysgeneral NO-LOCK NO-ERROR.
+    IF NOT AVAILABLE sysgeneral THEN 
+    DO:
+        ASSIGN
+            Respuesta = "No existe el registro en Sysgeneral." +
+            "Verifique con el depto de sistemas."
+            IdError   = TRUE.
+        RETURN.
+    END.       
+       
     FIND Acuse WHERE Acuse.Id-Acuse = pIdAcuse NO-LOCK NO-ERROR.
     IF AVAILABLE (Acuse) THEN 
     DO:
@@ -164,24 +172,25 @@ PROCEDURE GetAcuse:
         IF AVAILABLE PagoAcuse THEN 
         DO:
             IF pIdUser = "ELF" THEN 
-            DO:
+            DO: /*
                 IF (Acuse.FecDep - 300) > l-Fecha THEN 
                 DO:
                     ASSIGN
                         Respuesta = 'Acuse con fecha de deposito posterior. Depositar en. ' + STRING(Acuse.FecDep)
                         IdError   = TRUE.
                     RETURN.
-                END.    
+                END.   
+                */ 
             END.
             ELSE 
-            DO:
+            DO: /*
                 IF Acuse.FecDep > l-Fecha THEN 
                 DO:
                     ASSIGN
                         Respuesta = 'Acuse con fecha de deposito posterior. Depositar en. ' + STRING(Acuse.FecDep)
                         IdError   = TRUE.
                     RETURN.
-                END.
+                END.  */ 
             END.
         END.
        
@@ -217,10 +226,14 @@ PROCEDURE GetAcuse:
                 NO-LOCK NO-ERROR.
             IF AVAILABLE CPago THEN 
             DO:
+                /* Validar si ya pasaron 30 días desde Acuse.FecDep */
+                /* NUEVA REGLA EN ESTE MODULO */ 
+                IF Acuse.FecDep < TODAY - 30 THEN DO:
                 ASSIGN
                     Respuesta = 'No se puede modificar, fue generado Complemento de Pago.'
                     IdError   = TRUE.  
-                RETURN.  
+                RETURN.    
+                END.
             END.
             /* 2. Lógica específica para usuario GEE */
             IF pIdUser = 'ELF' OR pIdUser ='NJCC' THEN     
@@ -420,7 +433,7 @@ PROCEDURE PostDepAcuse:
             AND PagoAcuse.id-tp = 61 NO-LOCK NO-ERROR.
         IF AVAILABLE PagoAcuse THEN 
         DO:
-            IF pIdUser = "gee" THEN 
+            IF pIdUser = 'ELF' OR pIdUser = 'NJCC' THEN 
             DO:
                 IF (Acuse.FecDep - 300) > l-Fecha THEN 
                 DO:
@@ -428,9 +441,9 @@ PROCEDURE PostDepAcuse:
                         Respuesta = 'Acuse con fecha de deposito posterior. Depositar en. ' + STRING(Acuse.FecDep)
                         IdError   = TRUE.
                     RETURN.
-                END.    
+                END.                   
             END.
-            ELSE 
+            ELSE              
             DO:
                 IF Acuse.FecDep > l-Fecha THEN 
                 DO:
@@ -440,7 +453,7 @@ PROCEDURE PostDepAcuse:
                     RETURN.
                 END.
             END.
-        END.
+        END.             
        
         IF Acuse.Estatus = 1 THEN 
         DO:
@@ -474,10 +487,14 @@ PROCEDURE PostDepAcuse:
                 NO-LOCK NO-ERROR.
             IF AVAILABLE CPago THEN 
             DO:
+                /* Validar si ya pasaron 30 días desde Acuse.FecDep */
+                /* NUEVA REGLA EN ESTE MODULO */ 
+                IF Acuse.FecDep < TODAY - 30 THEN DO:
                 ASSIGN
                     Respuesta = 'No se puede modificar, fue generado Complemento de Pago.'
                     IdError   = TRUE.  
                 RETURN.  
+                END.
             END.
             /* 2. Lógica específica para usuario GEE */
             IF pIdUser = 'ELF' OR pIdUser = 'NJCC' THEN 
