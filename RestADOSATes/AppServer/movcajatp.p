@@ -138,7 +138,18 @@ DEFINE VARIABLE l-Lista     AS CHARACTER NO-UNDO
     
 DEFINE TEMP-TABLE ttCajaFiltro NO-UNDO
     FIELD idCaja AS INTEGER.
-    
+
+DEFINE TEMP-TABLE ttCajaDep NO-UNDO
+    FIELD IdCaja AS INTEGER.
+
+DEFINE TEMP-TABLE ttDeptoSuc
+    FIELD IdDepto    AS CHARACTER
+    FIELD IdSucursal AS CHARACTER
+    FIELD Secuencia  AS INTEGER.
+
+DEFINE VARIABLE cDepto AS CHARACTER NO-UNDO.
+
+       
 /* ********************  Preprocessor Definitions  ******************** */
 
 
@@ -220,6 +231,91 @@ PROCEDURE GetMovCajaTP:
         END.
     END.
     
+    
+    /* Determinar si se filtrará por sucursal */
+    IF l-suc <> "" THEN 
+    DO:
+        CASE l-suc:
+            WHEN "M" THEN 
+                cDepto = "204".
+            WHEN "S" THEN 
+                cDepto = "506".
+            WHEN "A" THEN 
+                cDepto = "503".
+            WHEN "P" THEN 
+                cDepto = "511".
+            WHEN "R" THEN 
+                cDepto = "512".
+            WHEN "Q" THEN 
+                cDepto = "513".
+            WHEN "V" THEN 
+                cDepto = "514".
+            WHEN "N" THEN 
+                cDepto = "515".
+            WHEN "C" THEN 
+                cDepto = "510".
+            OTHERWISE 
+            cDepto = "". /* Sucursal no válida */
+        END.
+
+        /* Si el depto fue asignado, cargar las cajas filtradas */
+        IF cDepto <> "" THEN 
+        DO:
+            FOR EACH Caja WHERE Caja.Id-Depto = cDepto NO-LOCK:
+                CREATE ttCajaDep.
+                ASSIGN 
+                    ttCajaDep.IdCaja = Caja.Id-Caja.
+            END.
+        END.
+    END.
+     
+    /* LA SECUENCIA SEGUN LA SUCURSAL */ 
+    CREATE ttDeptoSuc. 
+    ASSIGN 
+        ttDeptoSuc.IdDepto    = "204" 
+        ttDeptoSuc.IdSucursal = "M" 
+        ttDeptoSuc.Secuencia  = 1.
+    CREATE ttDeptoSuc. 
+    ASSIGN 
+        ttDeptoSuc.IdDepto    = "503" 
+        ttDeptoSuc.IdSucursal = "A" 
+        ttDeptoSuc.Secuencia  = 2.
+    CREATE ttDeptoSuc. 
+    ASSIGN 
+        ttDeptoSuc.IdDepto    = "506" 
+        ttDeptoSuc.IdSucursal = "S" 
+        ttDeptoSuc.Secuencia  = 3.
+    CREATE ttDeptoSuc. 
+    ASSIGN 
+        ttDeptoSuc.IdDepto    = "510" 
+        ttDeptoSuc.IdSucursal = "C" 
+        ttDeptoSuc.Secuencia  = 4.
+    CREATE ttDeptoSuc. 
+    ASSIGN 
+        ttDeptoSuc.IdDepto    = "511" 
+        ttDeptoSuc.IdSucursal = "P" 
+        ttDeptoSuc.Secuencia  = 5.
+    CREATE ttDeptoSuc. 
+    ASSIGN 
+        ttDeptoSuc.IdDepto    = "512" 
+        ttDeptoSuc.IdSucursal = "R" 
+        ttDeptoSuc.Secuencia  = 6.
+    CREATE ttDeptoSuc. 
+    ASSIGN 
+        ttDeptoSuc.IdDepto    = "513" 
+        ttDeptoSuc.IdSucursal = "Q" 
+        ttDeptoSuc.Secuencia  = 7.
+    CREATE ttDeptoSuc. 
+    ASSIGN 
+        ttDeptoSuc.IdDepto    = "514" 
+        ttDeptoSuc.IdSucursal = "V" 
+        ttDeptoSuc.Secuencia  = 8.
+    CREATE ttDeptoSuc. 
+    ASSIGN 
+        ttDeptoSuc.IdDepto    = "515" 
+        ttDeptoSuc.IdSucursal = "N" 
+        ttDeptoSuc.Secuencia  = 9.  
+            
     FOR EACH MovCaja WHERE (IF l-Caja = "0" THEN TRUE  
         ELSE CAN-FIND(FIRST ttCajaFiltro WHERE ttCajaFiltro.idCaja = MovCaja.Id-Caja))                    
         AND MovCaja.FecOper  >= dFechaIni 
@@ -230,16 +326,28 @@ PROCEDURE GetMovCajaTP:
         ELSE (IF l-TP = 52 OR l-TP = 62 THEN (DetMovc.Id-TP = 52 OR DetMovc.Id-TP = 62) 
         ELSE DetMovc.Id-TP = l-TP)) NO-LOCK,
         FIRST Remision WHERE Remision.Id-Remision = MovCaja.Referencia NO-LOCK:
+            
+        /* Si se filtró por sucursal, validar que la caja esté dentro */
+        IF l-suc <> "" AND CAN-FIND(FIRST ttCajaDep) 
+            AND NOT CAN-FIND(FIRST ttCajaDep WHERE ttCajaDep.IdCaja = DetMovC.Id-Caja) THEN NEXT.
+    
 
-        IF l-suc = 'M' AND NOT CAN-DO("1,2,3,4,5,6,7,8,16,17,18,22,31,32,33",STRING(DeTMovC.Id-Caja)) THEN NEXT.
-        IF l-suc = 'S' AND NOT CAN-DO("9,12,13,14,19,20,21,23,44,77",STRING(DeTMovC.Id-Caja)) THEN NEXT.
-        IF l-suc = 'A' AND NOT CAN-DO("10,11,15,55,66,88",STRING(DeTMovC.Id-Caja)) THEN NEXT.
-        IF l-suc = 'P' AND NOT CAN-DO("60,61,62,63,64,65,67,68,69",STRING(DeTMovC.Id-Caja)) THEN NEXT.
-        IF l-suc = 'R' AND NOT CAN-DO("70,71,72,73,74,75,76,78,79",STRING(DeTMovC.Id-Caja)) THEN NEXT.
-        IF l-suc = 'Q' AND NOT CAN-DO("80,81,82,83,84,85,86,87,89",STRING(DeTMovC.Id-Caja)) THEN NEXT.
-        IF l-suc = 'V' AND NOT CAN-DO("90,91,92,93,94,95,96",STRING(DeTMovC.Id-Caja)) THEN NEXT.
-        IF l-suc = 'N' AND NOT CAN-DO("100,101,102,103,104,105,106",STRING(DeTMovC.Id-Caja)) THEN NEXT.
-        IF l-suc = 'C' AND NOT CAN-DO("50,51,52,53,54,56,57,58,59",STRING(DeTMovC.Id-Caja)) THEN NEXT.                              
+            
+        /*
+           Ticket
+          IF l-suc = 'M' AND NOT CAN-DO("1,2,3,4,5,6,7,8,16,17,18,22,31,32,33",STRING(DeTMovC.Id-Caja)) THEN NEXT.
+          IF l-suc = 'S' AND NOT CAN-DO("9,12,13,14,19,20,21,23,44,77",STRING(DeTMovC.Id-Caja)) THEN NEXT.
+          IF l-suc = 'A' AND NOT CAN-DO("10,11,15,55,66,88",STRING(DeTMovC.Id-Caja)) THEN NEXT.
+          IF l-suc = 'P' AND NOT CAN-DO("60,61,62,63,64,65,67,68,69",STRING(DeTMovC.Id-Caja)) THEN NEXT.
+          IF l-suc = 'R' AND NOT CAN-DO("70,71,72,73,74,75,76,78,79",STRING(DeTMovC.Id-Caja)) THEN NEXT.
+          IF l-suc = 'Q' AND NOT CAN-DO("80,81,82,83,84,85,86,87,89",STRING(DeTMovC.Id-Caja)) THEN NEXT.
+          IF l-suc = 'V' AND NOT CAN-DO("90,91,92,93,94,95,96",STRING(DeTMovC.Id-Caja)) THEN NEXT.
+          IF l-suc = 'N' AND NOT CAN-DO("100,101,102,103,104,105,106",STRING(DeTMovC.Id-Caja)) THEN NEXT.
+          IF l-suc = 'C' AND NOT CAN-DO("50,51,52,53,54,56,57,58,59",STRING(DeTMovC.Id-Caja)) THEN NEXT.  
+          
+          */            
+        
+                        
     //IF DetMovC.Id-Banco <> l-Banco AND l-Banco > 0 THEN NEXT.
         IF DetMovC.Cheque <> l-Cheque AND l-Cheque <> "0" THEN NEXT.
         IF (DetMovC.MontoPago < l-Monto - 0.50 OR
@@ -270,10 +378,23 @@ PROCEDURE GetMovCajaTP:
             t-Rep.Mov         = DetMovC.Mov      /* JASS07072025 */
             t-Rep.Id-Dev      = DetMovC.Id-Dev.
         
+        
+        FIND FIRST Caja WHERE Caja.Id-Caja = DetMovC.Id-Caja NO-LOCK NO-ERROR.
+        IF AVAILABLE Caja THEN 
+        DO:
+            FIND FIRST ttDeptoSuc WHERE ttDeptoSuc.IdDepto = STRING(Caja.Id-Depto) NO-ERROR.
+            IF AVAILABLE ttDeptoSuc THEN 
+            DO:
+                ASSIGN
+                    t-Rep.Secuencia  = ttDeptoSuc.Secuencia
+                    t-rep.IdSucursal = ttDeptoSuc.IdSucursal.
+            END.
+        END.
+        /*
         IF CAN-DO("1,2,3,4,5,6,7,8,16,17,18,22,31,32,33",STRING(DeTMovC.Id-Caja))  THEN
             ASSIGN t-Rep.Secuencia  = 1
                 t-rep.IdSucursal = "M".
-        ELSE IF CAN-DO("10,11,15,55,66,88",STRING(DeTMovC.Id-Caja))  THEN
+        ELSE IF CAN-DO("10,11,99",STRING(DeTMovC.Id-Caja))  THEN
                 ASSIGN t-Rep.Secuencia  = 2
                     t-rep.IdSucursal = "A".
             ELSE IF CAN-DO("9,12,13,14,19,20,21,23,44,77",STRING(DeTMovC.Id-Caja))  THEN
@@ -288,15 +409,15 @@ PROCEDURE GetMovCajaTP:
                         ELSE IF CAN-DO("70,71,72,73,74,75,76,78,79",STRING(DeTMovC.Id-Caja))  THEN
                                 ASSIGN t-Rep.Secuencia  = 6
                                     t-rep.IdSucursal = "R".
-                            ELSE IF CAN-DO("80,81,82,83,84,85,86,87,89",STRING(DeTMovC.Id-Caja))  THEN
+                            ELSE IF CAN-DO("80,81,82,83,84,85,86",STRING(DeTMovC.Id-Caja))  THEN
                                     ASSIGN t-Rep.Secuencia  = 7
                                         t-rep.IdSucursal = "Q".
                                 ELSE IF CAN-DO("90,91,92,93,94,95,96",STRING(DeTMovC.Id-Caja))  THEN
                                         ASSIGN t-Rep.Secuencia  = 8
                                             t-rep.IdSucursal = "V".
                                     ELSE ASSIGN t-Rep.Secuencia  = 9
-                                            t-rep.IdSucursal = "N".
-    
+                                            t-rep.IdSucursal = "N".  
+              */ 
     END.
     
     FOR EACH t-rep NO-LOCK 
@@ -382,9 +503,10 @@ PROCEDURE GetMovCajaTP:
             FIND FIRST Anticipo 
                 WHERE Anticipo.Id-Anticipo = ttDetMovC.Anticipo
                 NO-LOCK NO-ERROR.
-            IF AVAILABLE Anticipo THEN DO:
+            IF AVAILABLE Anticipo THEN 
+            DO:
                 ASSIGN
-                ttDetMovC.Anticipo = Anticipo.Id-Acuse.
+                    ttDetMovC.Anticipo = Anticipo.Id-Acuse.
                // ttDetMovC.FechaDep = Anticipo.FecReg.
             END.
         END. 
@@ -394,9 +516,10 @@ PROCEDURE GetMovCajaTP:
             FIND FIRST Acuse 
                 WHERE Acuse.Id-Acuse = ttDetMovC.Anticipo
                 NO-LOCK NO-ERROR.
-            IF AVAILABLE Acuse THEN DO:
+            IF AVAILABLE Acuse THEN 
+            DO:
                 ASSIGN
-                ttDetMovC.FechaDep = Acuse.FecDep.
+                    ttDetMovC.FechaDep = Acuse.FecDep.
             END.
         END.               
 
