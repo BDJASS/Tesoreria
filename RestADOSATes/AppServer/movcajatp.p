@@ -4,7 +4,7 @@
     File        : movcajatp.p
     Purpose     : 
 
-    Syntax      : tesc0010
+    Syntax      : Basado en tesc0010.p
 
     Description : 
 
@@ -13,12 +13,21 @@
     Notes       :
   ----------------------------------------------------------------------*/
 /*
+  AdosaERP_Mantenimiento
   Ticket 1122
   Agregar las columnas de FechaDeposito,Anticipo
   JASS07072025
   En la Tabla de MovCaja en Movimiento los de Tipo A son Anticipos
   y se guardan en el Id-Dev de la misma tabla
-  .
+  
+  Ticket 1464 Ligar la Sucursal con el Departamento de la Caja
+  JASS04082025
+  
+  Ticket 1469 En el Campo ttDetMovC.DescrBanco Agregar la 
+              info de DetMovC.PagInfo,ya que en el front no
+              se utilizara la Descripcion del Banco.         
+  JASS05082025
+  .           
 */
 
 /* ***************************  Definitions  ************************** */
@@ -48,7 +57,7 @@ DEFINE TEMP-TABLE ttDetMovC
     FIELD IdCliente  AS INTEGER
     FIELD MontoPago  AS DECIMAL
     FIELD IdBanco    AS INTEGER
-    FIELD DescrBanco AS CHARACTER
+    FIELD DescrBanco AS CHARACTER  /* JASS05082025 */
     FIELD NumCheque  AS CHARACTER
     FIELD Remision   AS CHARACTER
     FIELD Cuenta     AS CHARACTER
@@ -112,6 +121,7 @@ DEFINE TEMP-TABLE t-rep
     FIELD Plazo       LIKE DetMovC.Plazo
     FIELD Mov         LIKE DetMovC.Mov      /* JASS07072025 */
     FIELD Id-Dev      LIKE DetMovC.Id-Dev
+    FIELD PagInfo     LIKE DetMovC.PagInfo  /* JASS05082025 */
     INDEX Idx-Prim secuencia id-tp turno id-caja id-remision.
     
 DEFINE VARIABLE l-Pago      LIKE DetMovC.MontoPago NO-UNDO.    
@@ -233,6 +243,7 @@ PROCEDURE GetMovCajaTP:
     
     
     /* Determinar si se filtrará por sucursal */
+    /* JASS04082025 */ 
     IF l-suc <> "" THEN 
     DO:
         CASE l-suc:
@@ -376,7 +387,8 @@ PROCEDURE GetMovCajaTP:
             t-Rep.TrackII     = IF DetMovC.ArqC <> "" OR DetMovC.NOperacion <> "" /*AND DetMovC.MsgCode <> ""*/ THEN "PINPAD" ELSE ""
             t-Rep.Plazo       = DetMovC.Plazo
             t-Rep.Mov         = DetMovC.Mov      /* JASS07072025 */
-            t-Rep.Id-Dev      = DetMovC.Id-Dev.
+            t-Rep.Id-Dev      = DetMovC.Id-Dev
+            t-Rep.PagInfo     = DetMovC.PagInfo. /* JASS05082025 */
         
         
         FIND FIRST Caja WHERE Caja.Id-Caja = DetMovC.Id-Caja NO-LOCK NO-ERROR.
@@ -474,7 +486,7 @@ PROCEDURE GetMovCajaTP:
       //ACCUMULATE t-rep.MontoCambio (TOTAL BY t-rep.Id-Caja).
       //ACCUMULATE t-rep.MontoPago (TOTAL BY t-rep.Id-Caja).
       
-        FIND FIRST Banco WHERE Banco.Id-Banco = t-rep.id-banco NO-LOCK NO-ERROR.
+      //  FIND FIRST Banco WHERE Banco.Id-Banco = t-rep.id-banco NO-LOCK NO-ERROR.
 
         CREATE ttDetMovC.
       
@@ -487,7 +499,8 @@ PROCEDURE GetMovCajaTP:
             ttDetMovC.IdCliente  = t-rep.Id-cliente
             ttDetMovC.MontoPago  = t-rep.montopago
             ttDetMovC.IdBanco    = t-rep.id-banco
-            ttDetMovC.DescrBanco = IF AVAILABLE Banco THEN Banco.Nombre ELSE ""
+            ttDetMovC.DescrBanco = t-rep.PagInfo   /* JASS05082025 */
+         // ttDetMovC.DescrBanco = IF AVAILABLE Banco THEN Banco.Nombre ELSE ""  /* JASS05082025 */
             ttDetMovC.NumCheque  = t-rep.Cheque
             ttDetMovC.Remision   = t-rep.Id-Remision
             ttDetMovC.Cuenta     = t-rep.CtaCheq.
