@@ -99,7 +99,7 @@ PROCEDURE GetRelFacEnvByFactura:
             ttRelFacEnv.Tipo         = vTipo.
         RELEASE ttRelFacEnv.
     END.
-
+RETURN.
 END PROCEDURE.
 
 /* *************** PROCEDURE 2: Por IdRelFac (GRID 2) ******************* */
@@ -190,7 +190,7 @@ PROCEDURE GetRelFacEnvByRelacion:
             RELEASE ttRelFacDoc.
 
         END.
-
+    RETURN.
     END PROCEDURE.
 
 @openapi.openedge.export(type="REST", useReturnValue="false", writeDataSetBeforeImage="false").
@@ -236,13 +236,14 @@ IF NOT AVAILABLE RelFacEnv THEN DO:
             IdError   = TRUE
             Respuesta = "No se encontró la relación: " + IdRelFac + 
                         " con factura " + IdFactura.
-        RETURN.   
+        RETURN.    
 END.
 
     ASSIGN RelFacEnv.Entregado = IdEntregado
            Respuesta = "Estado Entregado actualizado correctamente a: " + STRING(IdEntregado).
     /* Liberar Tabla */       
     IF AVAILABLE RelFacEnv THEN RELEASE RelFacEnv.   
+    RETURN.
 END PROCEDURE.    
     
     

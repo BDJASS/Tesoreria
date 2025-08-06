@@ -669,5 +669,6 @@ PROCEDURE GetMovCajaTP:
     RELEASE ttTotales.
     
     DATASET dsMovCaja:WRITE-JSON("LONGCHAR", opcJson, TRUE).
+RETURN.    
 END PROCEDURE.
 
