@@ -17,3 +17,4 @@ DO TRANSACTION:
            Adosa.e-mail.hora       = TIME.
 END.
 RELEASE Adosa.e-mail.
+  

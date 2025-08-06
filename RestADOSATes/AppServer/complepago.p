@@ -1093,7 +1093,7 @@ PROCEDURE EnviaCorreo.
                 &Direccion  = "l-Mail"
                 &Refer      = "'DIRECTO'"
                 &Attachment = ""
-      }
+      }    
     
     /* Se quita porque tarda mucho en enviar el correo con Rest           
     RUN /usr2/adosa/procs/correo01.p (INPUT l-Mail,
