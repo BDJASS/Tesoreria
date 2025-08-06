@@ -4,7 +4,7 @@
     File        : teserp010.p
     Purpose     : 
 
-    Syntax      :
+    Syntax      : Basado en tesa0010.p
 
     Description : HU06 Ficha Depositos
 

@@ -977,6 +977,28 @@
   &lt;/mapping:mapOutput>&#xD;
   &lt;mapping:mapFault name=&quot;default_fault&quot;/>&#xD;
 &lt;/mapping:messageMapping></lm:properties>
+            <lm:properties name="_MovCajaPermitida::teserp026..CajasPermitidas::GET">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?>&#xD;
+&lt;mapping:messageMapping xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xmlns:mapping=&quot;http://www.progress.com/caf/mapping1.0&quot; xmlns:metadata=&quot;http://www.progress.com/caf/mapping1.0/toolingMetadata&quot;>&#xD;
+  &lt;metadata:toolingMetadata xsi:type=&quot;metadata:toolingMetadata&quot;>&#xD;
+    &lt;metadata:mapInput>&#xD;
+      &lt;metadata:source>&#xD;
+        &lt;metadata:mappablesData displayName=&quot;Depto&quot; expressionName=&quot;${rest.queryparam['Depto']}&quot; mappableType=&quot;MANUAL&quot;/>&#xD;
+      &lt;/metadata:source>&#xD;
+      &lt;metadata:target/>&#xD;
+    &lt;/metadata:mapInput>&#xD;
+    &lt;metadata:mapOutput>&#xD;
+      &lt;metadata:source/>&#xD;
+      &lt;metadata:target/>&#xD;
+    &lt;/metadata:mapOutput>&#xD;
+  &lt;/metadata:toolingMetadata>&#xD;
+  &lt;mapping:mapInput>&#xD;
+    &lt;mapping:rule action=&quot;None&quot; resource=&quot;&quot; source=&quot;${rest.queryparam['Depto']}&quot; target=&quot;${idl.param['pDepto']}&quot; type=&quot;INTERFACE_PARAM&quot;/>&#xD;
+  &lt;/mapping:mapInput>&#xD;
+  &lt;mapping:mapOutput>&#xD;
+    &lt;mapping:rule action=&quot;None&quot; resource=&quot;&quot; source=&quot;${idl.param['ttCaja']}&quot; target=&quot;${http.body}&quot; type=&quot;INTERFACE_PARAM&quot;/>&#xD;
+  &lt;/mapping:mapOutput>&#xD;
+  &lt;mapping:mapFault name=&quot;default_fault&quot;/>&#xD;
+&lt;/mapping:messageMapping></lm:properties>
             <lm:properties name="_MovCajaTP::movcajatp..GetMovCajaTP::GET">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?>&#xD;
 &lt;mapping:messageMapping xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xmlns:mapping=&quot;http://www.progress.com/caf/mapping1.0&quot; xmlns:metadata=&quot;http://www.progress.com/caf/mapping1.0/toolingMetadata&quot;>&#xD;
   &lt;metadata:toolingMetadata xsi:type=&quot;metadata:toolingMetadata&quot;>&#xD;
@@ -984,10 +1006,11 @@
       &lt;metadata:source>&#xD;
         &lt;metadata:mappablesData displayName=&quot;Sucursal&quot; expressionName=&quot;${rest.queryparam['Sucursal']}&quot; mappableType=&quot;MANUAL&quot;/>&#xD;
         &lt;metadata:mappablesData displayName=&quot;Caja&quot; expressionName=&quot;${rest.queryparam['Caja']}&quot; mappableType=&quot;MANUAL&quot;/>&#xD;
-        &lt;metadata:mappablesData displayName=&quot;Fecha&quot; expressionName=&quot;${rest.queryparam['Fecha']}&quot; mappableType=&quot;MANUAL&quot;/>&#xD;
         &lt;metadata:mappablesData displayName=&quot;TipoPago&quot; expressionName=&quot;${rest.queryparam['TipoPago']}&quot; mappableType=&quot;MANUAL&quot;/>&#xD;
-        &lt;metadata:mappablesData displayName=&quot;NumCheque&quot; expressionName=&quot;${rest.queryparam['NumCheque']}&quot; mappableType=&quot;MANUAL&quot;/>&#xD;
+        &lt;metadata:mappablesData displayName=&quot;FechaIni&quot; expressionName=&quot;${rest.queryparam['FechaIni']}&quot; mappableType=&quot;MANUAL&quot;/>&#xD;
+        &lt;metadata:mappablesData displayName=&quot;FechaFin&quot; expressionName=&quot;${rest.queryparam['FechaFin']}&quot; mappableType=&quot;MANUAL&quot;/>&#xD;
         &lt;metadata:mappablesData displayName=&quot;Monto&quot; expressionName=&quot;${rest.queryparam['Monto']}&quot; mappableType=&quot;MANUAL&quot;/>&#xD;
+        &lt;metadata:mappablesData displayName=&quot;NumCheque&quot; expressionName=&quot;${rest.queryparam['NumCheque']}&quot; mappableType=&quot;MANUAL&quot;/>&#xD;
       &lt;/metadata:source>&#xD;
       &lt;metadata:target/>&#xD;
     &lt;/metadata:mapInput>&#xD;
@@ -999,10 +1022,11 @@
   &lt;mapping:mapInput>&#xD;
     &lt;mapping:rule action=&quot;None&quot; resource=&quot;&quot; source=&quot;${rest.queryparam['Sucursal']}&quot; target=&quot;${idl.param['lSuc']}&quot; type=&quot;INTERFACE_PARAM&quot;/>&#xD;
     &lt;mapping:rule action=&quot;None&quot; resource=&quot;&quot; source=&quot;${rest.queryparam['Caja']}&quot; target=&quot;${idl.param['lCaja']}&quot; type=&quot;INTERFACE_PARAM&quot;/>&#xD;
-    &lt;mapping:rule action=&quot;None&quot; resource=&quot;&quot; source=&quot;${rest.queryparam['Fecha']}&quot; target=&quot;${idl.param['lFecha']}&quot; type=&quot;INTERFACE_PARAM&quot;/>&#xD;
     &lt;mapping:rule action=&quot;None&quot; resource=&quot;&quot; source=&quot;${rest.queryparam['TipoPago']}&quot; target=&quot;${idl.param['lTP']}&quot; type=&quot;INTERFACE_PARAM&quot;/>&#xD;
-    &lt;mapping:rule action=&quot;None&quot; resource=&quot;&quot; source=&quot;${rest.queryparam['NumCheque']}&quot; target=&quot;${idl.param['lCheque']}&quot; type=&quot;INTERFACE_PARAM&quot;/>&#xD;
+    &lt;mapping:rule action=&quot;None&quot; resource=&quot;&quot; source=&quot;${rest.queryparam['FechaIni']}&quot; target=&quot;${idl.param['lFechaIni']}&quot; type=&quot;INTERFACE_PARAM&quot;/>&#xD;
+    &lt;mapping:rule action=&quot;None&quot; resource=&quot;&quot; source=&quot;${rest.queryparam['FechaFin']}&quot; target=&quot;${idl.param['lFechaFin']}&quot; type=&quot;INTERFACE_PARAM&quot;/>&#xD;
     &lt;mapping:rule action=&quot;None&quot; resource=&quot;&quot; source=&quot;${rest.queryparam['Monto']}&quot; target=&quot;${idl.param['lMonto']}&quot; type=&quot;INTERFACE_PARAM&quot;/>&#xD;
+    &lt;mapping:rule action=&quot;None&quot; resource=&quot;&quot; source=&quot;${rest.queryparam['NumCheque']}&quot; target=&quot;${idl.param['lCheque']}&quot; type=&quot;INTERFACE_PARAM&quot;/>&#xD;
   &lt;/mapping:mapInput>&#xD;
   &lt;mapping:mapOutput>&#xD;
     &lt;mapping:rule action=&quot;None&quot; resource=&quot;&quot; source=&quot;${idl.param['opcJson']}&quot; target=&quot;${http.body}&quot; type=&quot;INTERFACE_PARAM&quot;/>&#xD;

@@ -288,6 +288,6 @@ PROCEDURE GetVisorAcuses:
             END.
         END.
     END.   
-
+RETURN.
 END PROCEDURE.
 
