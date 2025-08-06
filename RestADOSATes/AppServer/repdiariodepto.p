@@ -13,16 +13,6 @@
     Notes       :
   ----------------------------------------------------------------------*/
 
-/*
-  Empresa  : Consultoria en Informatica Ejecutiva
-  Sistema  : ADOSA
-  Modulo   : Cuentas por Cobrar
-  Programa : cxcc0260.p
-  Funcion  : Diario de Depositos
-  Autor    : LUIS
-  Fecha    : 27/11/96
-  Modificado: RNPC - 2019-08-15 - Ajustes para mostrar montos en dolares identificados
-*/
 /* ***************************  Definitions  ************************** */
 
 BLOCK-LEVEL ON ERROR UNDO, THROW.
