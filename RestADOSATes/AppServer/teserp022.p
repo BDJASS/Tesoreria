@@ -52,6 +52,9 @@ DEF VAR l-meses         AS CHAR FORMAT "x(12)" EXTENT 12 INITIAL
     ["Enero",        "Febrero",      "Marzo",        "Abril",
      "Mayo",         "Junio",        "Julio",        "Agosto",
      "Septiembre",   "Octubre",      "Noviembre",    "Diciembre"]     NO-UNDO.
+     
+DEF VAR l-acuse     LIKE DepBanco.Id-Acuse NO-UNDO.
+     
  
 DEFINE TEMP-TABLE ttRepDiario NO-UNDO
     FIELD FecAplica     AS DATE
@@ -100,16 +103,20 @@ PROCEDURE GetRepDiarioDepLinea:
            l-Importe   = 0
            l-Total     = 0.
     
+    LOG-MANAGER:WRITE-MESSAGE("/RepDiarioDepLinea >>> Ejecutando: Reporte desde " +
+      STRING(dFechaIni, "99/99/9999") + " hasta " + STRING(dFechaFin, "99/99/9999")).   
+    
     FOR EACH DepBanco WHERE DepBanco.Conciliado AND
              DepBanco.FecAplica >= dFechaIni AND
              DepBanco.FecAplica <= dFechaFin AND
              (DepBanco.Id-Pedido <> '' OR 
-             DepBanco.Id-Remision <> '')
+             DepBanco.Id-Remision <> '')       
              NO-LOCK BY FecAplica:
     
         ASSIGN 
             l-Documento = IF DepBanco.Id-Remision <> '' THEN DepBanco.Id-Remision ELSE DepBanco.Id-Pedido
-            l-Cliente   = "".
+            l-Cliente   = ""
+            l-acuse     =  IF DepBanco.Id-AcuseAnt <> '' THEN DepBanco.Id-AcuseAnt ELSE DepBanco.Id-Acuse .
                     
         // Busco informacion del usuario
         FIND FIRST Usuario WHERE Usuario.Id-User = DepBanco.Id-User NO-LOCK NO-ERROR.
@@ -145,7 +152,7 @@ PROCEDURE GetRepDiarioDepLinea:
                     ttRepDiario.FecAplica    = DepBanco.FecAplica 
                     ttRepDiario.Documento    = l-Documento
                     ttRepDiario.Banco        = l-Banco
-                    ttRepDiario.Acuse        = DepBanco.Id-Acuse
+                    ttRepDiario.Acuse        = l-acuse
                     ttRepDiario.IdCliente    = DepBanco.Id-Cliente
                     ttRepDiario.Nombre       = l-Cliente 
                     ttRepDiario.Importe      = l-Importe
@@ -154,7 +161,7 @@ PROCEDURE GetRepDiarioDepLinea:
                     ttRepDiario.Descripcion  = DepBanco.Descripcion
                     ttRepDiario.Elaboro      = Usuario.Nom-Usuario WHEN AVAILABLE Usuario.
         END.
-    END.   
+    END.     
     
 
 END PROCEDURE.

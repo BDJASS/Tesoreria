@@ -82,9 +82,8 @@ DEFINE TEMP-TABLE ttCheque NO-UNDO
     FIELD Banco2      AS CHAR
     FIELD CtaCheqDE   LIKE CheDev.CtaCheqDE
     FIELD Comen1      LIKE CheDev.Comen
-    FIELD Comen2      LIKE CheDev.Comen    
-    FIELD Comen3      LIKE CheDev.Comen
-    FIELD UsuarioCanc LIKE Chedev.UsuarioCanc.
+    FIELD Comen2      LIKE CheDev.Comen
+    FIELD Comen3      LIKE CheDev.Comen.
 
 
 DEF TEMP-TABLE ttSaldo NO-UNDO
@@ -182,8 +181,7 @@ PROCEDURE GetChequeDevuelto:
             ttCheque.CtaCheqDE   = CheDev.CtaCheqDE    
             ttCheque.Comen1      = CheDev.Comen[1]
             ttCheque.Comen2      = CheDev.Comen[2]
-            ttCheque.Comen2      = CheDev.Comen[3]
-            ttCheque.UsuarioCanc = CheDev.UsuarioCanc .
+            ttCheque.Comen2      = CheDev.Comen[3] .
 
         RELEASE Cliente.
     END.
