@@ -1085,7 +1085,17 @@ PROCEDURE EnviaCorreo.
     /* Activa confirmacion de lectura */
     ASSIGN
         v-MailDe = v-MailDe + CHR(1) + "No,No".
-        
+    
+     {inva0007.i
+                &Asunto     = "l-Asunto"
+                &contenido  = "l-Contenido"
+                &Iniciales  = "'JAGR'"
+                &Direccion  = "l-Mail"
+                &Refer      = "'DIRECTO'"
+                &Attachment = ""
+      }
+    
+    /* Se quita porque tarda mucho en enviar el correo con Rest           
     RUN /usr2/adosa/procs/correo01.p (INPUT l-Mail,
         INPUT v-MailDe,
         INPUT "",
@@ -1094,5 +1104,6 @@ PROCEDURE EnviaCorreo.
         INPUT l-Asunto,
         INPUT l-Contenido,
         OUTPUT v-Enviado).
+    */  
 END   
 
