@@ -6,7 +6,7 @@
 
     Syntax      :
 
-    Description : 
+    Description :    
 
     Author(s)   : sis6
     Created     : Fri May 09 17:30:23 CST 2025
@@ -834,7 +834,7 @@ PROCEDURE CancelaCFD:
     END.
     ELSE
         v-estatus = ''.
-
+   
     IF v-estatus = 'A' THEN 
     DO:
         /* Asigna en que servidor se cancelara */
@@ -1075,7 +1075,7 @@ PROCEDURE EnviaCorreo.
             v-ResponderA = Usuario.e-mail + ";" + Usuario.Nom-Usuario.
             
     ASSIGN 
-        l-Mail = "desarrollo10@adosa.com.mx".
+        l-Mail = "flucio@adosa.com.mx;desarrollo10@adosa.com.mx".
             
     /* Asigna el mail de respuesta */
     IF v-ResponderA <> "" THEN
@@ -1085,7 +1085,17 @@ PROCEDURE EnviaCorreo.
     /* Activa confirmacion de lectura */
     ASSIGN
         v-MailDe = v-MailDe + CHR(1) + "No,No".
-        
+    
+     {programas/inva0007.i
+                &Asunto     = "l-Asunto"
+                &contenido  = "l-Contenido"
+                &Iniciales  = "'JAGR'"
+                &Direccion  = "l-Mail"
+                &Refer      = "'DIRECTO'"
+                &Attachment = ""
+      }    
+    
+    /* Se quita porque tarda mucho en enviar el correo con Rest           
     RUN /usr2/adosa/procs/correo01.p (INPUT l-Mail,
         INPUT v-MailDe,
         INPUT "",
@@ -1094,5 +1104,6 @@ PROCEDURE EnviaCorreo.
         INPUT l-Asunto,
         INPUT l-Contenido,
         OUTPUT v-Enviado).
+    */  
 END   
 
