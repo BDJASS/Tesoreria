@@ -341,4 +341,19 @@
       <prgs:param name="Depto" type="QUERY"/>
     </prgs:operation>
   </prgs:resource>
+  <prgs:resource consumes="application/json" name="_ImpresionCorteCaja" path="/ImpresionCorteCaja" produces="application/json">
+    <prgs:operation consumes="application/json" idls="RestADOSATes/.services/AppServer/cortecajaimpre.pidl::com.progress.openedge.pdt.bpmbindings" name="cortecajaimpre..GetCorteCajaImpre" produces="application/json" verb="GET">
+      <prgs:param name="Fecha" type="QUERY"/>
+      <prgs:param name="Caja" type="QUERY"/>
+      <prgs:param name="Turno" type="QUERY"/>
+      <prgs:param name="Usuario" type="QUERY"/>
+    </prgs:operation>
+    <prgs:operation consumes="application/json" idls="RestADOSATes/.services/AppServer/cortecajaimpre.pidl::com.progress.openedge.pdt.bpmbindings" name="cortecajaimpre..PostImpresion" produces="application/json" verb="POST">
+      <prgs:param name="Fecha" type="QUERY"/>
+      <prgs:param name="Caja" type="QUERY"/>
+      <prgs:param name="Turno" type="QUERY"/>
+      <prgs:param name="Usuario" type="QUERY"/>
+      <prgs:param name="Impresora" type="QUERY"/>
+    </prgs:operation>
+  </prgs:resource>
 </prgs:model>
