@@ -834,7 +834,7 @@ PROCEDURE CancelaCFD:
     END.
     ELSE
         v-estatus = ''.
-
+   
     IF v-estatus = 'A' THEN 
     DO:
         /* Asigna en que servidor se cancelara */
@@ -1075,7 +1075,7 @@ PROCEDURE EnviaCorreo.
             v-ResponderA = Usuario.e-mail + ";" + Usuario.Nom-Usuario.
             
     ASSIGN 
-        l-Mail = "desarrollo10@adosa.com.mx".
+        l-Mail = "flucio@adosa.com.mx;desarrollo10@adosa.com.mx".
             
     /* Asigna el mail de respuesta */
     IF v-ResponderA <> "" THEN
@@ -1086,7 +1086,7 @@ PROCEDURE EnviaCorreo.
     ASSIGN
         v-MailDe = v-MailDe + CHR(1) + "No,No".
     
-     {inva0007.i
+     {programas/inva0007.i
                 &Asunto     = "l-Asunto"
                 &contenido  = "l-Contenido"
                 &Iniciales  = "'JAGR'"
