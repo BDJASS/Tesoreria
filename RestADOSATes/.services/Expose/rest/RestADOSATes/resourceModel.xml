@@ -356,4 +356,9 @@
       <prgs:param name="Impresora" type="QUERY"/>
     </prgs:operation>
   </prgs:resource>
+  <prgs:resource consumes="application/json" name="_FolPolDep" path="/FolPolDep" produces="application/json">
+    <prgs:operation consumes="application/json" idls="RestADOSATes/.services/AppServer/teserp024.pidl::com.progress.openedge.pdt.bpmbindings" name="teserp024..GetFechasFolPolDep" produces="application/json" verb="GET">
+      <prgs:param name="year" type="QUERY"/>
+    </prgs:operation>
+  </prgs:resource>
 </prgs:model>
