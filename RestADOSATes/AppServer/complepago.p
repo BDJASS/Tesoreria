@@ -7,7 +7,7 @@
     Syntax      :
 
     Description :    
-
+ 
     Author(s)   : sis6
     Created     : Fri May 09 17:30:23 CST 2025
     Notes       :
@@ -1089,7 +1089,7 @@ PROCEDURE EnviaCorreo.
      {programas/inva0007.i
                 &Asunto     = "l-Asunto"
                 &contenido  = "l-Contenido"
-                &Iniciales  = "'JAGR'"
+                &Iniciales  = "'SIS10'"
                 &Direccion  = "l-Mail"
                 &Refer      = "'DIRECTO'"
                 &Attachment = ""
