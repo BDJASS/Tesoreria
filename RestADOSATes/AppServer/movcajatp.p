@@ -27,6 +27,11 @@
               info de DetMovC.PagInfo,ya que en el front no
               se utilizara la Descripcion del Banco.         
   JASS05082025
+  
+  Ticket 94 Es referente al ticket anterior 1469; Solo que ahora
+            En los tipos de Pago Cheque(61) ahi si se debe mostrar
+            la descripcion del banco, en los demas sigue Igual PagInfo
+            JASS21082025
   .           
 */
 
@@ -486,7 +491,7 @@ PROCEDURE GetMovCajaTP:
       //ACCUMULATE t-rep.MontoCambio (TOTAL BY t-rep.Id-Caja).
       //ACCUMULATE t-rep.MontoPago (TOTAL BY t-rep.Id-Caja).
       
-      //  FIND FIRST Banco WHERE Banco.Id-Banco = t-rep.id-banco NO-LOCK NO-ERROR.
+        FIND FIRST Banco WHERE Banco.Id-Banco = t-rep.id-banco NO-LOCK NO-ERROR.
 
         CREATE ttDetMovC.
       
@@ -499,8 +504,7 @@ PROCEDURE GetMovCajaTP:
             ttDetMovC.IdCliente  = t-rep.Id-cliente
             ttDetMovC.MontoPago  = t-rep.montopago
             ttDetMovC.IdBanco    = t-rep.id-banco
-            ttDetMovC.DescrBanco = t-rep.PagInfo   /* JASS05082025 */
-         // ttDetMovC.DescrBanco = IF AVAILABLE Banco THEN Banco.Nombre ELSE ""  /* JASS05082025 */
+            ttDetMovC.DescrBanco = IF t-rep.id-tp = 61 THEN Banco.Nombre ELSE t-rep.PagInfo   /* JASS05082025 - JASS21082025 */    
             ttDetMovC.NumCheque  = t-rep.Cheque
             ttDetMovC.Remision   = t-rep.Id-Remision
             ttDetMovC.Cuenta     = t-rep.CtaCheq.
